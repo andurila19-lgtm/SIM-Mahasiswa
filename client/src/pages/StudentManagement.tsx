@@ -205,34 +205,63 @@ const StudentManagement: React.FC = () => {
         if (e) e.preventDefault();
         if (!formData.full_name || !formData.nim_nip) return;
 
-        if (selectedStudent) {
-            // Update existing
-            const updatedStudent = { ...selectedStudent, ...formData };
-            setStudents(prev => prev.map(s => s.id === selectedStudent.id ? updatedStudent : s));
-            try {
-                // Pick only profile-related fields for profile update
+        setLoading(true);
+        try {
+            if (selectedStudent) {
+                // Update existing
                 const profileUpdate = {
                     full_name: formData.full_name,
                     nim_nip: formData.nim_nip,
                     email: formData.email,
-                    status: formData.status
+                    status: formData.status,
+                    faculty: formData.faculty,
+                    study_program: formData.study_program,
+                    semester: formData.semester,
+                    class_name: formData.class_name
                 };
-                await supabase.from('profiles').update(profileUpdate).eq('id', selectedStudent.id);
-                // In a real system, you would also update the 'students' table here
-            } catch (err) { console.error(err); }
-        } else {
-            const firstName = formData.full_name.trim().split(' ')[0].toLowerCase();
-            const newStudent: Student = {
-                id: Math.random().toString(36).substr(2, 9),
-                ...formData,
-                email: formData.email || `${firstName}_${formData.nim_nip}@student.ac.id`,
-                role: 'student'
-            };
-            setStudents(prev => [newStudent, ...prev]);
-        }
 
-        setIsAddModalOpen(false);
-        setSelectedStudent(null);
+                const { error } = await supabase
+                    .from('profiles')
+                    .update(profileUpdate)
+                    .eq('id', selectedStudent.id);
+
+                if (error) throw error;
+
+                const updatedStudent = { ...selectedStudent, ...formData };
+                setStudents(prev => prev.map(s => s.id === selectedStudent.id ? updatedStudent : s));
+            } else {
+                // Insert new student record
+                // Note: For a real app, this should generate a Firebase User too.
+                // For now, we use a random UUID-like string for the profile ID.
+                const newId = crypto.randomUUID?.() || Math.random().toString(36).substr(2, 9);
+                const firstName = formData.full_name.trim().split(' ')[0].toLowerCase();
+                const newEmail = formData.email || `${firstName}_${formData.nim_nip}@student.ac.id`;
+
+                const newStudentData = {
+                    id: newId,
+                    ...formData,
+                    email: newEmail,
+                    role: 'student'
+                };
+
+                const { error } = await supabase
+                    .from('profiles')
+                    .insert([newStudentData]);
+
+                if (error) throw error;
+
+                setStudents(prev => [newStudentData as Student, ...prev]);
+            }
+
+            setIsAddModalOpen(false);
+            setSelectedStudent(null);
+            alert(selectedStudent ? 'Data berhasil diperbarui!' : 'Mahasiswa berhasil ditambahkan!');
+        } catch (err: any) {
+            console.error('Error saving student:', err);
+            alert('Gagal menyimpan data: ' + (err.message || 'Terjadi kesalahan sistem'));
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleExportExcel = () => {
