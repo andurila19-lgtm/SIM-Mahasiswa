@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
+import { ACADEMIC_DATA } from '../config/academicData';
 
 interface Course {
     id: string;
@@ -122,22 +123,13 @@ const KRSPage: React.FC = () => {
                         className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 outline-none focus:border-primary/50 transition-all font-bold text-sm cursor-pointer"
                     >
                         <option value="all">Semua Prodi</option>
-                        <optgroup label="FKIP">
-                            <option value="Bimbingan dan Konseling (S1)">Bimbingan dan Konseling (S1)</option>
-                            <option value="Pendidikan Guru Sekolah Dasar (S1)">Pendidikan Guru Sekolah Dasar (S1)</option>
-                            <option value="Pendidikan Bahasa Inggris (S1)">Pendidikan Bahasa Inggris (S1)</option>
-                        </optgroup>
-                        <optgroup label="FEB">
-                            <option value="Manajemen (S1)">Manajemen (S1)</option>
-                            <option value="Akuntansi (S1)">Akuntansi (S1)</option>
-                        </optgroup>
-                        <optgroup label="FT">
-                            <option value="Teknik Informatika (S1)">Teknik Informatika (S1)</option>
-                            <option value="Sistem Informasi (S1)">Sistem Informasi (S1)</option>
-                        </optgroup>
-                        <optgroup label="FIKS">
-                            <option value="Farmasi (S1)">Farmasi (S1)</option>
-                        </optgroup>
+                        {Object.entries(ACADEMIC_DATA).map(([faculty, prodis]) => (
+                            <optgroup key={faculty} label={faculty}>
+                                {prodis.map(prodi => (
+                                    <option key={prodi} value={prodi}>{prodi}</option>
+                                ))}
+                            </optgroup>
+                        ))}
                     </select>
                 </div>
                 <div className="space-y-2">
