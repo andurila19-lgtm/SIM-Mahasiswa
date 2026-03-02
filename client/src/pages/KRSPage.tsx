@@ -54,6 +54,11 @@ const KRSPage: React.FC = () => {
         { id: '4', code: 'FK101', name: 'Dasar Konseling', sks: 2, semester: 2, lecturer: 'Dr. Maria Ulfa', schedule: 'Kamis, 10:00 - 12:30', room: 'Lab Konsul', prodi: 'Bimbingan dan Konseling (S1)', class_name: 'C' },
         { id: '5', code: 'EB105', name: 'Pengantar Manajemen', sks: 2, semester: 2, lecturer: 'Hj. Ratna Sari, M.H', schedule: 'Jumat, 10:00 - 12:30', room: 'R. Teori 101', prodi: 'Manajemen (S1)', class_name: 'A' },
         { id: '6', code: 'SI405', name: 'Enterprise Architecture', sks: 3, semester: 4, lecturer: 'Prof. Bambang Pamungkas', schedule: 'Sabtu, 08:00 - 10:30', room: 'R. Teori 305', prodi: 'Sistem Informasi (S1)', class_name: 'B' },
+        { id: '7', code: 'EB201', name: 'Akuntansi Biaya', sks: 3, semester: 4, lecturer: 'Mulyadi, M.Acc', schedule: 'Senin, 13:00 - 15:30', room: 'R. Teori 401', prodi: 'Akuntansi (S1)', class_name: 'A' },
+        { id: '8', code: 'FS101', name: 'Farmakologi Dasar', sks: 3, semester: 2, lecturer: 'Apt. Sari Endah, M.Farm', schedule: 'Selasa, 08:00 - 10:30', room: 'Lab Farmasi', prodi: 'Farmasi (S1)', class_name: 'A' },
+        { id: '9', code: 'HK101', name: 'Hukum Perdata', sks: 4, semester: 2, lecturer: 'Dr. Hotman Paris, S.H', schedule: 'Rabu, 13:00 - 16:30', room: 'R. Teori 501', prodi: 'Hukum (S1)', class_name: 'B' },
+        { id: '10', code: 'PB601', name: 'Advanced Grammar', sks: 2, semester: 6, lecturer: 'Mr. John Doe', schedule: 'Kamis, 08:00 - 10:00', room: 'R. Bahasa', prodi: 'Pendidikan Bahasa Inggris (S1)', class_name: 'A' },
+        { id: '11', code: 'PD701', name: 'Metodologi Penelitian', sks: 3, semester: 1, lecturer: 'Prof. Dr. Suhardi', schedule: 'Sabtu, 13:00 - 15:30', room: 'R. Pasca 01', prodi: 'Pendidikan Dasar (S2)', class_name: 'C' },
     ];
 
     const filteredCourses = mockAvailableCourses.filter(course =>

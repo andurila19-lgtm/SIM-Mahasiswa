@@ -102,7 +102,7 @@ const DashboardPage: React.FC = () => {
 
         const superAdminStats: Stat[] = [
             { id: 1, name: 'Total Pengguna', value: '2.4k', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-            { id: 2, name: 'Prodi Aktif', value: '12', icon: School, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+            { id: 2, name: 'Prodi Aktif', value: '30', icon: School, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
             { id: 3, name: 'Transaksi Hari Ini', value: '84', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
             { id: 4, name: 'Laporan Sistem', value: '0 Error', icon: Bell, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-900/20' },
         ];
