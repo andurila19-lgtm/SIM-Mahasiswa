@@ -129,64 +129,73 @@ const DashboardPage: React.FC = () => {
     }, [profile]);
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Welcome Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                <div className="relative z-10">
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                        Selamat Datang, <span className="text-primary">{profile?.full_name?.split(' ')[0] || 'User'}</span> 👋
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400">
-                        Berikut ringkasan akademik Anda untuk hari ini, 2 Maret 2026.
-                    </p>
-                </div>
-                <div className="relative z-10 hidden md:block">
-                    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white dark:bg-slate-700 rounded-xl flex items-center justify-center text-primary shadow-sm">
-                            <Calendar size={24} />
+        <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-700">
+            {/* Hero Section - Ultra Compact */}
+            <div className="relative overflow-hidden bg-primary rounded-2xl lg:rounded-3xl p-4 lg:p-6 text-white shadow-lg shadow-primary/20">
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 lg:gap-6">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shrink-0">
+                            <School size={20} className="lg:scale-110" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tahun Akademik</p>
-                            <p className="text-sm font-bold text-slate-900 dark:text-white">2023/2024 Genap</p>
+                            <h1 className="text-xl lg:text-2xl font-black leading-tight mb-1">
+                                Hi, <span className="text-white/80">{profile?.full_name?.split(' ')[0] || 'Mahasiswa'}!</span>
+                            </h1>
+                            <p className="text-[10px] lg:text-sm font-medium opacity-70">
+                                Selamat datang kembali di SIM CEPAT.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-4 py-3 rounded-xl lg:rounded-2xl border border-white/10">
+                        <div className="text-center sm:text-left">
+                            <p className="text-[8px] lg:text-[10px] font-black uppercase tracking-widest opacity-50">Semester</p>
+                            <p className="text-xs lg:text-sm font-bold">Gan-5</p>
+                        </div>
+                        <div className="w-[1px] h-6 bg-white/20"></div>
+                        <div className="text-center sm:text-left">
+                            <p className="text-[8px] lg:text-[10px] font-black uppercase tracking-widest opacity-50">Tahun</p>
+                            <p className="text-xs lg:text-sm font-bold">23/24</p>
                         </div>
                     </div>
                 </div>
                 {/* Abstract Background Shapes */}
+                <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-all duration-700"></div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 -z-0"></div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                 {stats.map((stat) => (
                     <motion.div
                         key={stat.id}
                         whileHover={{ y: -5 }}
-                        className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-6"
+                        className="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6"
                     >
-                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0", stat.bg, stat.color)}>
-                            <stat.icon size={28} />
+                        <div className={cn("w-10 h-10 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center shrink-0", stat.bg, stat.color)}>
+                            <stat.icon size={20} className="lg:scale-125" />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">{stat.name}</p>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+                            <p className="text-[10px] lg:text-sm font-semibold text-slate-500 dark:text-slate-400 mb-0.5 lg:mb-1">{stat.name}</p>
+                            <p className="text-lg lg:text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
                         </div>
                     </motion.div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 {/* Main Chart Column */}
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <div className="flex items-center justify-between mb-8">
+                <div className="lg:col-span-2 space-y-6 lg:space-y-8">
+                    <div className="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Progres IPK Semester</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Statistik performa selama masa studi</p>
+                                <h3 className="text-base lg:text-lg font-bold text-slate-900 dark:text-white">Progres IPK Semester</h3>
+                                <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">Statistik performa selama masa studi</p>
                             </div>
                             <select
                                 value={selectedSemester}
                                 onChange={(e) => setSelectedSemester(e.target.value)}
-                                className="bg-slate-50 dark:bg-slate-800 border-none outline-none text-sm font-bold px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300"
+                                className="bg-slate-50 dark:bg-slate-800 border-none outline-none text-xs lg:text-sm font-bold px-3 py-2 rounded-xl text-slate-600 dark:text-slate-300 w-full sm:w-auto"
                             >
                                 <option value="Semua Semester">Semua Semester</option>
                                 <option value="Semester 1">Semester 1</option>
@@ -196,7 +205,7 @@ const DashboardPage: React.FC = () => {
                                 <option value="Semester 5">Semester 5</option>
                             </select>
                         </div>
-                        <div className="h-[300px] w-full">
+                        <div className="h-[250px] lg:h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 {selectedSemester === 'Semua Semester' ? (
                                     <AreaChart data={chartData}>

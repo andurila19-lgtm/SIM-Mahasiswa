@@ -118,17 +118,19 @@ const StudentManagement: React.FC = () => {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('role', 'student');
+                .eq('role', 'student')
+                .order('created_at', { ascending: false });
 
-            if (!error && data && data.length > 0) {
+            if (error) throw error;
+
+            if (data && data.length > 0) {
                 setStudents(normalizeStudentData(data as Student[]));
             } else {
-                // Also normalize local storage data if no DB data
-                setStudents(prev => normalizeStudentData(prev));
+                // If DB is genuinely empty, keep mock data but only if first load
+                setStudents(prev => prev.length === 0 ? [] : prev);
             }
         } catch (err) {
             console.error('Error fetching students:', err);
-            setStudents(prev => normalizeStudentData(prev));
         } finally {
             setLoading(false);
         }
@@ -305,23 +307,23 @@ const StudentManagement: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Header Section (Web) */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative group no-print">
-                <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-2">
+            {/* Header Section (Web & Mobile) */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative group no-print">
+                <div className="relative z-10 text-center lg:text-left">
+                    <div className="flex flex-col lg:flex-row items-center gap-4 mb-2">
                         <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary transition-transform group-hover:scale-110">
                             <Users size={28} />
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Manajemen Mahasiswa</h1>
+                        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Manajemen Mahasiswa</h1>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400">Total {displayStudents.length} Mahasiswa terdaftar dalam sistem.</p>
                 </div>
 
-                <div className="flex items-center gap-3 relative z-10">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row items-center gap-3 relative z-10">
+                    <div className="relative w-full sm:w-auto">
                         <button
                             onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-                            className="flex items-center gap-2 px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl transition-all border border-transparent hover:border-slate-300 dark:hover:border-slate-600"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl transition-all border border-transparent hover:border-slate-300 dark:hover:border-slate-600"
                         >
                             <Download size={18} />
                             Export Data
@@ -365,7 +367,7 @@ const StudentManagement: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-xl shadow-primary/20 transition-all transform active:scale-95"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-xl shadow-primary/20 transition-all transform active:scale-95"
                     >
                         <Plus size={18} />
                         Tambah Mahasiswa
@@ -419,8 +421,61 @@ const StudentManagement: React.FC = () => {
             </div>
 
             {/* Students Table */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden print-full-width">
-                <div className="overflow-x-auto text-sans">
+            {/* Table/Card View Toggle Container */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                {/* Mobile View: Cards */}
+                <div className="grid grid-cols-1 gap-4 p-4 lg:hidden">
+                    {displayStudents.map((student) => (
+                        <div key={student.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                                    {student.avatar_url ? (
+                                        <img src={student.avatar_url} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold">{student.full_name.charAt(0)}</div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-slate-900 dark:text-white truncate">{student.full_name}</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wider">{student.nim_nip}</p>
+                                </div>
+                                <div className={cn(
+                                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                    student.status === 'active' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" : "bg-red-50 dark:bg-red-500/10 text-red-600"
+                                )}>
+                                    {student.status}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                                <div className="bg-white dark:bg-slate-800 p-3 rounded-xl">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Program Studi</p>
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{student.study_program}</p>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 p-3 rounded-xl">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Semester/Kelas</p>
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{student.semester} - {student.class_name}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 pt-2">
+                                <button
+                                    onClick={() => { setSelectedStudent(student); setIsAddModalOpen(true); }}
+                                    className="flex-1 py-3 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl border border-slate-100 dark:border-slate-700 flex items-center justify-center gap-2"
+                                >
+                                    <Edit2 size={14} /> Detail
+                                </button>
+                                <button
+                                    onClick={() => { setSelectedStudent(student); setIsDeleteModalOpen(true); }}
+                                    className="w-12 h-12 flex items-center justify-center bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop View: Table */}
+                <div className="hidden lg:block overflow-x-auto print-full-width">
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="bg-slate-50 dark:bg-slate-800/50 border-y border-slate-100 dark:border-slate-800">

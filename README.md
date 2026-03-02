@@ -1,78 +1,42 @@
-# SIM Akademik - Modern Student Information System
+# SIM CEPAT - Sistem Informasi Manajemen Terpadu
 
-Sistem Informasi Manajemen (SIM) Akademik modern berstandar SaaS yang dirancang untuk efisiensi pengelolaan data mahasiswa, rencana studi, dan pemantauan akademik secara real-time.
+**SIM CEPAT** (Cepat | Efisien | Praktis | Akurat | Terintegrasi) adalah platform manajemen mahasiswa modern yang dirancang untuk kecepatan dan kemudahan akses di berbagai perangkat.
 
-## ✨ Fitur Utama (Terbaru)
+![Dashboard Preview](https://img.shields.io/badge/Status-Production-success?style=for-the-badge)
 
-### 👥 Manajemen Mahasiswa Tingkat Lanjut
-*   **Data Komprehensif**: Mendukung struktur akademik lengkap (Fakultas, Prodi (D3/S1/S2/S3), Semester, Status).
-*   **Smart Filter & Search**: Pencarian instan berdasarkan Nama/NIM dengan filter status dan tombol hapus pencarian otomatis.
-*   **Data Persistence**: Menggunakan sistem hybrid (Supabase + LocalStorage) sehingga data tetap aman meski halaman di-refresh.
-*   **Input Dinamis**: Formulir pendaftaran cerdas dengan dropdown Prodi yang berubah otomatis sesuai Fakultas yang dipilih.
+## ✨ Fitur Utama
+- **Manajemen Mahasiswa (CRUD)**: Kelola data profil mahasiswa secara *real-time*.
+- **Sinkronisasi Multi-Device**: Sinkronisasi data instan antar perangkat melalui Supabase.
+- **Tampilan Responsif Ultra Compact**: Desain premium yang dioptimalkan untuk Desktop, Tablet, dan Smartphone.
+- **KRS & Penilaian**: Manajemen Kartu Rencana Studi dan riwayat IPK per semester.
+- **Export Data**: Ekspor laporan ke format PDF dan Excel dengan satu klik.
 
-### 📄 Ekspor Data Multi-Format
-*   **Excel Export**: Unduh daftar mahasiswa lengkap dalam format `.xlsx` untuk keperluan laporan administratif.
-*   **Premium PDF Print**: Layout cetak yang dioptimalkan (menyembunyikan sidebar/header) untuk hasil dokumen fisik yang profesional.
+## 🛠️ Tech Stack
+- **Frontend**: React.js, Vite, TypeScript, Tailwind CSS, Framer Motion.
+- **Backend/Database**: Supabase (PostgreSQL & Row Level Security).
+- **Authentication**: Firebase Auth.
+- **Deployment**: Vercel.
 
-### 📚 Integrasi KRS (Kartu Rencana Studi)
-*   **Manajemen Personal**: Admin/Dosen dapat mengelola KRS langsung dari profil spesifik mahasiswa.
-*   **Filter Relevansi**: Daftar mata kuliah di halaman KRS otomatis terfilter berdasarkan Prodi dan Semester mahasiswa yang bersangkutan.
-*   **Detail Penjadwalan**: Informasi lengkap mencakup Nama Dosen, Ruang Kelas, Kode Matkul, SKS, dan Jam Kuliah.
+## 🚀 Cara Instalasi Lokal
+1. Clone repository:
+   ```bash
+   git clone https://github.com/andurila19-lgtm/SIM-Mahasiswa.git
+   ```
+2. Instalasi dependensi:
+   ```bash
+   cd client
+   npm install
+   ```
+3. Setup Environment Variables (`.env`):
+   Pastikan Anda memiliki kredensial Supabase dan Firebase yang valid.
+4. Jalankan aplikasi:
+   ```bash
+   npm run dev
+   ```
 
-### 🎨 UI/UX Premium
-*   **Rich Aesthetics**: Desain modern menggunakan Tailwind CSS dengan efek glassmorphism, animasi Framer Motion, dan dukungan Dark Mode.
-*   **Responsive**: Pengalaman mulus di perangkat desktop maupun tablet.
-
----
-
-## 🛠️ Arsitektur Teknologi
-- **Frontend**: React.js 18, Vite, TypeScript
-- **Styling**: Tailwind CSS, Lucide React (Icons), Framer Motion (Animations)
-- **Backend & Database**: Supabase (Postgres), Firebase (Auth & Storage)
-- **Utilities**: XLSX (Excel processing), File-Saver, React Router 6
-
----
-
-## 🚀 Cara Menjalankan Project
-
-### 1. Prasyarat
-- Node.js (v18 ke atas)
-- Akun Supabase & Firebase
-
-### 2. Setup Environment
-Buat file `.env` di folder `client/` (cek `.env.example` untuk referensi):
-```env
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-VITE_FIREBASE_API_KEY=...
-... (dan variabel firebase lainnya)
-```
-
-### 3. Instalasi & Eksekusi
-```bash
-# Instal dependencies
-npm install
-
-# Jalankan mode pengembangan
-npm run start
-```
+## 🌐 Deployment
+Aplikasi ini sudah di-deploy secara otomatis ke Vercel dan dapat diakses melalui:
+**[sim-mahasiswa.vercel.app](https://sim-mahasiswa.vercel.app/)**
 
 ---
-
-## 🛡️ Manajemen Peran (Roles)
-1. **Super Admin**: Kontrol penuh sistem dan manajemen data induk.
-2. **Dosen (Lecturer)**: Pemantauan akademik, pengelolaan KRS mahasiswa, dan input nilai.
-3. **Mahasiswa (Student)**: Pendaftaran KRS, melihat jadwal, dan riwayat pembayaran.
-
----
-
-## 📈 Roadmap Pengembangan
-- [x] Manajemen Mahasiswa & Struktur Fakultas Lengkap.
-- [x] Ekspor PDF & Excel.
-- [x] Integrasi KRS per Mahasiswa.
-- [ ] Sistem Absensi Real-time.
-- [ ] Modul Pembayaran Virtual Account.
-- [ ] Grafik Statistik Akademik (Charts).
-
----
-© 2026 - Dikembangkan untuk SIM Akademik Modern.
+© 2026 Admin Kampus - SIM CEPAT Development Team.

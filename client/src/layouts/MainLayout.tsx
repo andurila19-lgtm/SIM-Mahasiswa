@@ -19,7 +19,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const MainLayout: React.FC = () => {
     const { profile, signOut } = useAuth();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default closed for mobile
+    const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
     const navigate = useNavigate();
 
     const handleSignOut = async () => {
@@ -47,37 +48,74 @@ const MainLayout: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
-            {/* Sidebar */}
+            {/* Sidebar Overlay for Mobile */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] md:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Desktop & Mobile Sidebar */}
             <motion.aside
                 initial={false}
-                animate={{ width: isSidebarOpen ? 260 : 80 }}
-                className="relative bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50 shadow-sm no-print"
+                animate={{
+                    width: isDesktopSidebarOpen ? 260 : 80,
+                }}
+                className={cn(
+                    "fixed md:relative inset-y-0 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-[70] shadow-2xl md:shadow-none transition-transform duration-300 no-print overflow-hidden",
+                    isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                )}
             >
                 {/* Logo Section */}
-                <div className="p-6 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                        <School size={24} />
+                <div className="p-6 flex items-center justify-between gap-3 min-h-[80px]">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0 group-hover:scale-110 transition-transform">
+                            <School size={24} />
+                        </div>
+                        <AnimatePresence>
+                            {isDesktopSidebarOpen && (
+                                <motion.span
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    className="font-bold text-lg dark:text-white truncate"
+                                >
+                                    SIM CEPAT
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
                     </div>
-                    <AnimatePresence>
-                        {isSidebarOpen && (
-                            <motion.span
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -10 }}
-                                className="font-bold text-lg dark:text-white truncate"
-                            >
-                                SIM Mahasiswa
-                            </motion.span>
-                        )}
-                    </AnimatePresence>
+
+                    {/* Desktop Toggle Button - Moved to Top */}
+                    <button
+                        onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
+                        className="hidden lg:flex items-center justify-center p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all hover:text-primary"
+                    >
+                        {isDesktopSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                    </button>
+
+                    {/* Mobile Close Button */}
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="p-2 lg:hidden text-slate-500 hover:bg-slate-100 rounded-lg"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+                <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
                     {filteredNavItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            onClick={() => setIsSidebarOpen(false)} // Close on click for mobile
                             className={({ isActive }) => cn(
                                 "flex items-center gap-4 px-3 py-3 rounded-lg transition-all group",
                                 isActive
@@ -87,7 +125,7 @@ const MainLayout: React.FC = () => {
                         >
                             <item.icon size={22} className="shrink-0" />
                             <AnimatePresence>
-                                {isSidebarOpen && (
+                                {(isDesktopSidebarOpen || isSidebarOpen) && (
                                     <motion.span
                                         initial={{ opacity: 0, width: 0 }}
                                         animate={{ opacity: 1, width: 'auto' }}
@@ -104,18 +142,18 @@ const MainLayout: React.FC = () => {
 
                 {/* User Info & Toggle */}
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700">
                             {profile?.avatar_url ? (
                                 <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold">
+                                <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold bg-slate-100 dark:bg-slate-800">
                                     {profile?.full_name?.charAt(0) || 'U'}
                                 </div>
                             )}
                         </div>
                         <AnimatePresence>
-                            {isSidebarOpen && (
+                            {(isDesktopSidebarOpen || isSidebarOpen) && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -128,22 +166,21 @@ const MainLayout: React.FC = () => {
                             )}
                         </AnimatePresence>
                     </div>
-
-                    <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
-                    >
-                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
                 </div>
             </motion.aside>
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Topbar */}
-                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 z-40 no-print">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-semibold dark:text-white">Portal Akademik</h2>
+                <header className="h-16 md:h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 z-40 no-print">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 md:hidden text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+                        >
+                            <Menu size={20} />
+                        </button>
+                        <h2 className="text-lg md:text-xl font-bold dark:text-white truncate max-w-[150px] md:max-w-none">SIM CEPAT</h2>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -163,8 +200,10 @@ const MainLayout: React.FC = () => {
                 </header>
 
                 {/* Main Content scrollable */}
-                <div className="flex-1 overflow-y-auto p-8">
-                    <Outlet />
+                <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar">
+                    <div className="max-w-[1600px] mx-auto">
+                        <Outlet />
+                    </div>
                 </div>
             </main>
         </div>
