@@ -30,3 +30,9 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+server/serviceAccount.json
+server/*.js
+server/..env_clean
+client/tmp_check_profiles.js
+tmp_check_profiles.js

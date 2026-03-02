@@ -156,7 +156,8 @@ const UserManagement: React.FC = () => {
             } else {
                 // Real User Creation via Backend API
                 const token = await currentUserAuth?.getIdToken();
-                const response = await fetch('http://localhost:5000/api/admin/create-user', {
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+                const response = await fetch(`${apiUrl}/admin/create-user`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -192,7 +193,8 @@ const UserManagement: React.FC = () => {
         setIsProcessingReset(true);
         try {
             const token = await currentUserAuth?.getIdToken();
-            const response = await fetch('http://localhost:5000/api/admin/reset-password', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            const response = await fetch(`${apiUrl}/admin/reset-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
