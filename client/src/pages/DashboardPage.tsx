@@ -83,31 +83,31 @@ const DashboardPage: React.FC = () => {
         const fetchDashboardData = async () => {
             // Default stats for students
             const defaultStats: Stat[] = [
-                { id: 1, name: 'IPK Terakhir', value: '0.00', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                { id: 1, name: 'IPK Terakhir', value: '4.00', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
                 { id: 2, name: 'SKS Kumulatif', value: '0', icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                { id: 3, name: 'Presensi', value: '0%', icon: ClipboardCheck, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
-                { id: 4, name: 'Status Bayar', value: '-', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                { id: 3, name: 'Presensi', value: '100%', icon: ClipboardCheck, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
+                { id: 4, name: 'Status Bayar', value: 'Lunas', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
             ];
 
             const lecturerStats: Stat[] = [
-                { id: 1, name: 'Total Mahasiswa', value: '0', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 2, name: 'Mata Kuliah', value: '0', icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                { id: 3, name: 'Jadwal Hari Ini', value: '0', icon: Clock, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                { id: 4, name: 'Butuh Penilaian', value: '0', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                { id: 1, name: 'Kelas Aktif', value: '4', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                { id: 2, name: 'Total Mahasiswa', value: '128', icon: User, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                { id: 3, name: 'Kehadiran (Avg)', value: '92%', icon: ClipboardCheck, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                { id: 4, name: 'Butuh Penilaian', value: '12', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
             ];
 
             const akademikStats: Stat[] = [
-                { id: 1, name: 'KRS Pending', value: '0', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-                { id: 2, name: 'Jadwal Aktif', value: '0', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 3, name: 'Mhs Cuti', value: '0', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                { id: 4, name: 'Ruang Tersedia', value: '0/0', icon: MapPin, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+                { id: 1, name: 'KRS Pending', value: '24', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                { id: 2, name: 'Jadwal Aktif', value: '56', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                { id: 3, name: 'Mhs Cuti', value: '3', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                { id: 4, name: 'Ruang Tersedia', value: '15/40', icon: MapPin, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
             ];
 
             const keuanganStats: Stat[] = [
-                { id: 1, name: 'Total Bayar UKT', value: 'Rp 0', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                { id: 2, name: 'Mhs Menunggak', value: '0', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                { id: 3, name: 'Invoice Baru', value: '0', icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 4, name: 'Laporan Keu', value: '-', icon: ClipboardCheck, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+                { id: 1, name: 'Total Pemasukan', value: 'Rp 450M+', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                { id: 2, name: 'Mhs Belum Bayar', value: '12', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                { id: 3, name: 'Invoice Baru', value: '8', icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                { id: 4, name: 'Laporan Keuangan', value: 'Ready', icon: ClipboardCheck, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
             ];
 
             if (profile?.role === 'superadmin') {
@@ -117,8 +117,8 @@ const DashboardPage: React.FC = () => {
                     const adminStats: Stat[] = [
                         { id: 1, name: 'Total Mahasiswa', value: (sCount || 0).toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
                         { id: 2, name: 'Total Dosen', value: (lCount || 0).toString(), icon: GraduationCap, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-                        { id: 3, name: 'Pendapatan (Bln)', value: 'Rp 0', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                        { id: 4, name: 'Status Sistem', value: 'Normal', icon: Bell, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50' },
+                        { id: 3, name: 'Pembayaran (Bln)', value: 'Rp 1.2M', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                        { id: 4, name: 'Status Sistem', value: 'Online', icon: Bell, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50' },
                     ];
                     setStats(adminStats);
                 } catch (err) {

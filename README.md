@@ -19,19 +19,22 @@ Aplikasi dapat diakses secara langsung melalui:
 | 💰 Keuangan | `keuangan@sim.ac.id` | `keuangan123` |
 
 ## ✨ Fitur Utama
-- **Manajemen Mahasiswa (CRUD)**: Kelola data profil mahasiswa secara *real-time*.
-- **Sinkronisasi Multi-Device**: Sinkronisasi data instan antar perangkat melalui Supabase.
-- **Tampilan Responsif Ultra Compact**: Desain premium yang dioptimalkan untuk Desktop, Tablet, dan Smartphone.
-- **KRS & Penilaian**: Manajemen Kartu Rencana Studi dan riwayat IPK per semester.
-- **Export Data**: Ekspor laporan ke format PDF dan Excel dengan satu klik.
+- **Manajemen User & Role**: Pengaturan akses terpusat untuk Admin, Dosen, Mahasiswa, dan Staff.
+- **Sistem Pengumuman (CRUD)**: Admin dapat membuat, mengedit, dan mengelola pengumuman kampus secara *real-time*.
+- **KRS Online Real-time**: Pendaftaran mata kuliah langsung tersinkronisasi dengan database untuk verifikasi cepat oleh akademik.
+- **Jadwal Kuliah Dinamis**: Tampilan jadwal mingguan otomatis berdasarkan pengambilan KRS mahasiswa.
+- **Tagihan & Pembayaran**: Integrasi sistem keuangan untuk pelacakan UKT dan upload bukti pembayaran mahasiswa.
+- **Laporan & Analytics**: Visualisasi data pendaftaran, keuangan, dan statistik akademik dalam Dashboard yang informatif.
+- **Tampilan Premium**: UI modern dengan Dark Mode support, animasi halus (Framer Motion), dan responsivitas tinggi.
 
 ## 🛠️ Tech Stack
-- **Frontend**: React.js, Vite, TypeScript, Tailwind CSS, Framer Motion.
-- **Backend/Database**: Supabase (PostgreSQL & Row Level Security).
-- **Authentication**: Firebase Auth.
+- **Frontend**: React.js 18, Vite, TypeScript, Tailwind CSS, Framer Motion, Lucide React.
+- **Backend/Database**: Supabase (PostgreSQL, Real-time Engine).
+- **Authentication**: Firebase Authentication.
+- **State Management**: React Context API & Hooks.
 - **Deployment**: Vercel.
 
-## � Upload ke GitHub
+##  Upload ke GitHub
 
 Untuk mengunggah proyek ini ke repositori Anda sendiri:
 

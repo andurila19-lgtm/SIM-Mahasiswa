@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import Cookies from 'js-cookie';
 import { User, Lock, ArrowRight, Loader, Shield, GraduationCap, BookOpen, ClipboardCheck, CreditCard } from 'lucide-react';
 
 interface DemoAccount {
@@ -26,10 +27,19 @@ const demoAccounts: DemoAccount[] = [
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [loginAs, setLoginAs] = useState('');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const savedEmail = Cookies.get('rememberedEmail');
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleLogin = async (e?: React.FormEvent, demoEmail?: string, demoPassword?: string) => {
         if (e) e.preventDefault();
@@ -40,7 +50,18 @@ const LoginPage: React.FC = () => {
         const loginPassword = demoPassword || password;
 
         try {
+            // Set persistence based on rememberMe
+            await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+
             await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+
+            // Save or remove email from cookie
+            if (rememberMe) {
+                Cookies.set('rememberedEmail', loginEmail, { expires: 30 }); // 30 days
+            } else {
+                Cookies.remove('rememberedEmail');
+            }
+
             navigate('/dashboard');
         } catch (err: any) {
             console.error(err);
@@ -137,6 +158,30 @@ const LoginPage: React.FC = () => {
                                 required
                             />
                         </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-1">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className="relative flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="peer sr-only"
+                                />
+                                <div className="w-5 h-5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-md transition-all peer-checked:bg-primary peer-checked:border-primary group-hover:border-primary/50"></div>
+                                <svg
+                                    className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity left-[3px] pointer-events-none"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Ingat Saya</span>
+                        </label>
                     </div>
 
                     <button

@@ -11,7 +11,11 @@ import {
     LogOut,
     Menu,
     X,
-    School
+    School,
+    User,
+    Calendar,
+    Clock,
+    TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
@@ -29,28 +33,41 @@ const MainLayout: React.FC = () => {
     };
 
     const navItems = [
+        // UNIVERSAL (Mostly Dashboard)
         { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan'] },
 
-        // Superadmin & Akademik
+        // ADMIN (SUPERADMIN) SPECIFIC
         { name: 'Manajemen Mahasiswa', icon: Users, path: '/students', roles: ['superadmin', 'akademik'] },
         { name: 'Manajemen Dosen', icon: Users, path: '/lecturers', roles: ['superadmin'] },
         { name: 'Sistem Akademik', icon: School, path: '/academic', roles: ['superadmin', 'akademik'] },
+        { name: 'Kurikulum', icon: BookOpen, path: '/curriculum', roles: ['superadmin', 'akademik'] },
         { name: 'Verifikasi KRS', icon: ClipboardCheck, path: '/krs-verification', roles: ['superadmin', 'akademik'] },
+        { name: 'Verifikasi Bayar', icon: CreditCard, path: '/payment-verification', roles: ['superadmin', 'keuangan'] },
+        { name: 'Manajemen User', icon: User, path: '/users', roles: ['superadmin'] },
 
-        // Dosen
+        // MAHASISWA SPECIFIC
+        { name: 'Profil Saya', icon: User, path: '/profile', roles: ['mahasiswa'] },
+        { name: 'KRS Online', icon: BookOpen, path: '/krs', roles: ['mahasiswa'] },
+        { name: 'Jadwal Kuliah', icon: Calendar, path: '/schedule', roles: ['mahasiswa', 'akademik'] },
+        { name: 'Nilai & Transkrip', icon: GraduationCap, path: '/grades', roles: ['mahasiswa'] },
+        { name: 'Status Pembayaran', icon: CreditCard, path: '/payments', roles: ['mahasiswa'] },
+
+        // DOSEN SPECIFIC
         { name: 'Kelas Saya', icon: BookOpen, path: '/my-classes', roles: ['dosen'] },
         { name: 'Input Nilai', icon: GraduationCap, path: '/input-grades', roles: ['dosen'] },
+        { name: 'Absensi Mhs', icon: ClipboardCheck, path: '/attendance', roles: ['dosen'] },
+        { name: 'Materi Kuliah', icon: BookOpen, path: '/materials', roles: ['dosen'] },
 
-        // Mahasiswa
-        { name: 'KRS Online', icon: BookOpen, path: '/krs', roles: ['mahasiswa', 'superadmin'] },
-        { name: 'Kurikulum', icon: School, path: '/curriculum', roles: ['superadmin', 'akademik'] },
+        // KEUANGAN SPECIFIC
+        { name: 'Tagihan Mhs', icon: CreditCard, path: '/student-bills', roles: ['keuangan'] },
+        { name: 'Riwayat Bayar', icon: Clock, path: '/payment-history', roles: ['keuangan'] },
+        { name: 'Laporan Keuangan', icon: TrendingUp, path: '/finance-report', roles: ['keuangan'] },
 
-        // Keuangan
-        { name: 'Tagihan & SPP', icon: CreditCard, path: '/payments', roles: ['mahasiswa', 'keuangan'] },
-        { name: 'Verifikasi Bayar', icon: ClipboardCheck, path: '/payment-verification', roles: ['superadmin', 'keuangan'] },
+        // AKADEMIK SPECIFIC
+        { name: 'Laporan Akademik', icon: TrendingUp, path: '/academic-report', roles: ['akademik'] },
 
-        // Universal
-        { name: 'Pengumuman', icon: Bell, path: '/announcements', roles: ['superadmin', 'dosen', 'akademik', 'keuangan'] },
+        // GLOBAL
+        { name: 'Pengumuman', icon: Bell, path: '/announcements', roles: ['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan'] },
     ];
 
     const filteredNavItems = navItems.filter(item =>

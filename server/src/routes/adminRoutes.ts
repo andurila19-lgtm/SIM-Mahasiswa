@@ -51,4 +51,22 @@ router.post('/courses', restrictTo('super_admin'), async (req: Request, res: Res
     res.json(data ? data[0] : null);
 });
 
+// Reset User Password (Admin only)
+router.post('/reset-password', restrictTo('super_admin'), async (req: Request, res: Response) => {
+    const { uid, newPassword } = req.body;
+
+    if (!uid || !newPassword) {
+        return res.status(400).json({ error: 'UID and newPassword are required' });
+    }
+
+    try {
+        const { auth } = await import('../config/firebase.js');
+        await auth.updateUser(uid, { password: newPassword });
+        res.json({ message: 'Password updated successfully' });
+    } catch (error: any) {
+        console.error('Reset Password Error:', error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
 export default router;

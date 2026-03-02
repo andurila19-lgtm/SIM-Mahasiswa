@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabase';
 import { ACADEMIC_DATA } from '../config/academicData';
 import SuccessNotification from '../components/SuccessNotification';
 import Toast, { ToastType } from '../components/Toast';
@@ -53,6 +54,7 @@ const KRSPage: React.FC = () => {
     // Notification state
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     // Toast state
     const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: ToastType }>({
@@ -61,71 +63,107 @@ const KRSPage: React.FC = () => {
         type: 'success'
     });
 
+    const studentId = targetStudent?.id || profile?.id; // Standardize ID usage
+
     const showToast = (message: string, type: ToastType = 'success') => {
         setToast({ isOpen: true, message, type });
     };
 
-    const mockAvailableCourses: Course[] = [];
+    const mockAvailableCourses: Course[] = []; // In a real app, these would come from 'courses' table
 
-    // Persist KRS per student
-    useEffect(() => {
-        const studentId = targetStudent?.nim_nip || profile?.id; // Fallback to self
+    // Load KRS from Supabase
+    const fetchKRS = async () => {
         if (!studentId) return;
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('student_krs')
+                .select('*')
+                .eq('student_id', studentId)
+                .single();
 
-        const saved = localStorage.getItem(`krs_selected_${studentId}`);
-        const savedStatus = localStorage.getItem(`krs_status_${studentId}`);
+            if (error && error.code !== 'PGRST116') throw error; // PGRST116 is not found
 
-        if (saved) {
-            setSelectedCourses(JSON.parse(saved));
-        }
-        if (savedStatus) {
-            setKrsStatus(savedStatus as any);
-        } else if (targetStudent?.study_program) {
-            // Auto-select 21 SKS by default for all students based on prodi & semester
-            const availableForProdi = mockAvailableCourses.filter(c =>
-                c.prodi === targetStudent.study_program &&
-                c.semester === targetStudent.semester &&
-                (c.class_name === targetStudent.class_name || c.class_name === 'A')
-            );
-
-            let currentSKS = 0;
-            const autoSelected: Course[] = [];
-
-            for (const course of availableForProdi) {
-                if (currentSKS + course.sks <= 24) {
-                    autoSelected.push(course);
-                    currentSKS += course.sks;
-                    if (currentSKS >= 21) break;
-                }
+            if (data) {
+                // Assuming data.courses is an array of course objects or IDs
+                setSelectedCourses(data.courses || []);
+                setKrsStatus(data.status || 'draft');
+            } else if (targetStudent?.study_program) {
+                // Auto-seed logic for demo if no record exists
+                const availableForProdi = mockAvailableCourses.filter(c =>
+                    c.prodi === targetStudent.study_program &&
+                    c.semester === targetStudent.semester
+                );
+                setSelectedCourses(availableForProdi.slice(0, 5));
             }
-            setSelectedCourses(autoSelected);
-            // Save initial auto-selection
-            localStorage.setItem(`krs_selected_${studentId}`, JSON.stringify(autoSelected));
+        } catch (err: any) {
+            console.error('KRS Fetch Error:', err);
+            showToast('Gagal memuat data KRS', 'error');
+        } finally {
+            setLoading(false);
         }
-    }, [targetStudent, profile]);
+    };
 
     useEffect(() => {
-        const studentId = targetStudent?.nim_nip || profile?.id;
+        fetchKRS();
+    }, [studentId]);
+
+    const handleAjukanKRS = async () => {
         if (!studentId) return;
-
-        localStorage.setItem(`krs_selected_${studentId}`, JSON.stringify(selectedCourses));
-        localStorage.setItem(`krs_status_${studentId}`, krsStatus);
-    }, [selectedCourses, krsStatus, targetStudent, profile]);
-
-    const handleAjukanKRS = () => {
         if (selectedCourses.length === 0) {
             showToast('Silakan pilih mata kuliah terlebih dahulu.', 'error');
             return;
         }
-        setKrsStatus('pending');
-        setSuccessMessage(isAcademicAdmin ? 'KRS Mahasiswa berhasil diverifikasi!' : 'KRS berhasil diajukan! Menunggu persetujuan dosen pembimbing.');
-        setShowSuccess(true);
+
+        setLoading(true);
+        try {
+            const nextStatus = isAcademicAdmin ? 'approved' : 'pending';
+            const { error } = await supabase
+                .from('student_krs')
+                .upsert({
+                    student_id: studentId,
+                    courses: selectedCourses,
+                    status: nextStatus,
+                    semester: targetStudent?.semester || 1,
+                    updated_at: new Date().toISOString(),
+                    student_name: targetStudent?.full_name || profile?.full_name
+                });
+
+            if (error) throw error;
+
+            setKrsStatus(nextStatus);
+            setSuccessMessage(isAcademicAdmin ? 'KRS Mahasiswa berhasil diverifikasi!' : 'KRS berhasil diajukan! Menunggu persetujuan dosen pembimbing.');
+            setShowSuccess(true);
+        } catch (err: any) {
+            showToast('Gagal menyimpan KRS: ' + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSimpanDraf = () => {
-        setKrsStatus('draft');
-        setSuccessMessage('Draf KRS berhasil disimpan.');
-        setShowSuccess(true);
+    const handleSimpanDraf = async () => {
+        if (!studentId) return;
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('student_krs')
+                .upsert({
+                    student_id: studentId,
+                    courses: selectedCourses,
+                    status: 'draft',
+                    semester: targetStudent?.semester || 1,
+                    updated_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
+            setKrsStatus('draft');
+            setSuccessMessage('Draf KRS berhasil disimpan.');
+            setShowSuccess(true);
+        } catch (err: any) {
+            showToast('Gagal menyimpan draf: ' + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const filteredCourses = useMemo(() => {

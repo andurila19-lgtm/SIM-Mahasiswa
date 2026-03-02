@@ -1,6 +1,7 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { initGA, trackPageView } from './lib/analytics';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
@@ -20,6 +21,13 @@ import InputGradesPage from './pages/InputGradesPage';
 import KRSVerificationPage from './pages/KRSVerificationPage';
 import PaymentVerificationPage from './pages/PaymentVerificationPage';
 import CurriculumPage from './pages/CurriculumPage';
+import UserManagement from './pages/UserManagement';
+import SchedulePage from './pages/SchedulePage';
+import MaterialsPage from './pages/MaterialsPage';
+import StudentBillsPage from './pages/StudentBillsPage';
+import PaymentHistoryPage from './pages/PaymentHistoryPage';
+import FinanceReportPage from './pages/FinanceReportPage';
+import AcademicReportPage from './pages/AcademicReportPage';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -38,9 +46,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <>{children}</>;
 };
 
+// Analytics Tracker Component
+const AnalyticsTracker: React.FC = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        initGA();
+    }, []);
+
+    useEffect(() => {
+        trackPageView(location.pathname + location.search);
+    }, [location]);
+
+    return null;
+};
+
 const App: React.FC = () => {
     return (
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AnalyticsTracker />
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/403" element={<ForbiddenPage />} />
@@ -95,10 +119,39 @@ const App: React.FC = () => {
                     <Route path="payment-verification" element={
                         <ProtectedRoute allowedRoles={['superadmin', 'keuangan']}><PaymentVerificationPage /></ProtectedRoute>
                     } />
+                    <Route path="users" element={
+                        <ProtectedRoute allowedRoles={['superadmin']}><UserManagement /></ProtectedRoute>
+                    } />
+
+                    {/* Mahasiswa Extra Routes */}
+                    <Route path="schedule" element={
+                        <ProtectedRoute allowedRoles={['mahasiswa', 'akademik']}><SchedulePage /></ProtectedRoute>
+                    } />
+
+                    {/* Dosen Extra Routes */}
+                    <Route path="materials" element={
+                        <ProtectedRoute allowedRoles={['dosen']}><MaterialsPage /></ProtectedRoute>
+                    } />
+
+                    {/* Keuangan Specific Routes */}
+                    <Route path="student-bills" element={
+                        <ProtectedRoute allowedRoles={['keuangan']}><StudentBillsPage /></ProtectedRoute>
+                    } />
+                    <Route path="payment-history" element={
+                        <ProtectedRoute allowedRoles={['keuangan']}><PaymentHistoryPage /></ProtectedRoute>
+                    } />
+                    <Route path="finance-report" element={
+                        <ProtectedRoute allowedRoles={['keuangan']}><FinanceReportPage /></ProtectedRoute>
+                    } />
+
+                    {/* Akademik Specific Routes */}
+                    <Route path="academic-report" element={
+                        <ProtectedRoute allowedRoles={['akademik']}><AcademicReportPage /></ProtectedRoute>
+                    } />
 
                     {/* Universal */}
                     <Route path="announcements" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'dosen', 'akademik', 'keuangan']}><AnnouncementsPage /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan']}><AnnouncementsPage /></ProtectedRoute>
                     } />
                 </Route>
 
