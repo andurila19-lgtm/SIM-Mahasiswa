@@ -82,7 +82,15 @@ const LecturerManagement: React.FC = () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            if (data) setLecturers(data as Lecturer[]);
+            if (data) {
+                const mappedData = data.map((item: any) => ({
+                    ...item,
+                    nidn: item.nim_nip, // Map DB's nim_nip to frontend's nidn
+                    type: item.class_name || 'Dosen Mata Kuliah', // Workaround: use class_name for type
+                    sub_type: item.study_program || 'Dosen Pengampu Mata Kuliah' // Workaround: use study_program for sub_type
+                }));
+                setLecturers(mappedData as Lecturer[]);
+            }
         } catch (err) {
             console.error('Error fetching lecturers:', err);
         } finally {
@@ -98,10 +106,13 @@ const LecturerManagement: React.FC = () => {
         e.preventDefault();
         setIsSaving(true);
         try {
+            const { nidn, sub_type, type, ...restFormData } = formData;
             const payload = {
-                ...formData,
+                ...restFormData,
                 role: 'dosen',
-                nim_nip: formData.nidn // Sync nidn to nim_nip column
+                nim_nip: nidn, // Sync nidn to nim_nip column in DB
+                class_name: type, // Workaround: store type in class_name
+                study_program: sub_type // Workaround: store sub_type in study_program
             };
 
             let error;

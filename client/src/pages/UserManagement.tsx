@@ -58,7 +58,8 @@ const UserManagement: React.FC = () => {
         email: '',
         role: 'mahasiswa',
         status: 'active',
-        nim_nip: ''
+        nim_nip: '',
+        password: ''
     });
 
     const { user: currentUserAuth } = useAuth(); // Get current logged in user for auth token
@@ -97,7 +98,8 @@ const UserManagement: React.FC = () => {
                 email: user.email || '',
                 role: user.role || 'mahasiswa',
                 status: user.status || 'active',
-                nim_nip: user.nim_nip || ''
+                nim_nip: user.nim_nip || '',
+                password: '' // Default empty for edit modal
             });
         } else {
             setSelectedUser(null);
@@ -106,7 +108,8 @@ const UserManagement: React.FC = () => {
                 email: '',
                 role: 'mahasiswa',
                 status: 'active',
-                nim_nip: ''
+                nim_nip: '',
+                password: ''
             });
         }
         setIsModalOpen(true);
@@ -153,10 +156,11 @@ const UserManagement: React.FC = () => {
             } else {
                 // Insert (Mocking user creation in profiles)
                 // In production, this would involve creating a Firebase Auth user first
+                const { password, ...insertData } = formData;
                 const { error } = await supabase
                     .from('profiles')
                     .insert([{
-                        ...formData,
+                        ...insertData,
                         id: crypto.randomUUID(), // Temporarily random UUID for mock
                         created_at: new Date().toISOString()
                     }]);
@@ -531,17 +535,33 @@ const UserManagement: React.FC = () => {
                                     </div>
 
                                     {!selectedUser && (
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email</label>
-                                            <input
-                                                type="email"
-                                                required
-                                                value={formData.email}
-                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none outline-none p-4 rounded-2xl text-slate-900 dark:text-white font-bold placeholder:text-slate-300"
-                                                placeholder="john@campus.id"
-                                            />
-                                        </div>
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email</label>
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none outline-none p-4 rounded-2xl text-slate-900 dark:text-white font-bold placeholder:text-slate-300"
+                                                    placeholder="john@campus.id"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center px-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password Akun</label>
+                                                    <span className="text-[9px] text-primary font-bold uppercase">Default: NIP/NIDN</span>
+                                                </div>
+                                                <input
+                                                    type="password"
+                                                    required
+                                                    value={formData.password}
+                                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none outline-none p-4 rounded-2xl text-slate-900 dark:text-white font-bold placeholder:text-slate-300"
+                                                    placeholder="••••••••"
+                                                />
+                                            </div>
+                                        </>
                                     )}
 
                                     <div className="grid grid-cols-2 gap-4">
