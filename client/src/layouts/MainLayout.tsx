@@ -30,7 +30,10 @@ const MainLayout: React.FC = () => {
     const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['super_admin', 'lecturer', 'student'] },
         { name: 'Mahasiswa', icon: Users, path: '/students', roles: ['super_admin', 'lecturer'] },
+        { name: 'Dosen', icon: Users, path: '/lecturers', roles: ['super_admin'] },
+        { name: 'Daftar Matkul', icon: BookOpen, path: '/courses', roles: ['lecturer'] },
         { name: 'KRS', icon: BookOpen, path: '/krs', roles: ['super_admin', 'lecturer', 'student'] },
+        { name: 'Verifikasi KRS', icon: ClipboardCheck, path: '/krs-verification', roles: ['lecturer'] },
         { name: 'Akademik', icon: School, path: '/academic', roles: ['super_admin', 'lecturer', 'student'] },
         { name: 'Penilaian', icon: GraduationCap, path: '/grades', roles: ['super_admin', 'lecturer', 'student'] },
         { name: 'Presensi', icon: ClipboardCheck, path: '/attendance', roles: ['super_admin', 'lecturer', 'student'] },

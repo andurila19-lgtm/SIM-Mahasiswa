@@ -100,8 +100,11 @@ const DashboardPage: React.FC = () => {
             { id: 4, name: 'Butuh Penilaian', value: '48', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
         ];
 
+        const savedStudents = localStorage.getItem('sim_students');
+        const studentCount = savedStudents ? JSON.parse(savedStudents).length : 4;
+
         const superAdminStats: Stat[] = [
-            { id: 1, name: 'Total Pengguna', value: '2.4k', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+            { id: 1, name: 'Total Pengguna', value: (studentCount + 3).toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
             { id: 2, name: 'Prodi Aktif', value: '30', icon: School, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
             { id: 3, name: 'Transaksi Hari Ini', value: '84', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
             { id: 4, name: 'Laporan Sistem', value: '0 Error', icon: Bell, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-900/20' },
@@ -269,7 +272,11 @@ const DashboardPage: React.FC = () => {
                         </div>
                         <div className="space-y-6">
                             {announcements.map((news) => (
-                                <div key={news.id} className="space-y-2 relative pl-4 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[2px] before:bg-primary/20 hover:before:bg-primary before:transition-colors cursor-pointer group">
+                                <div
+                                    key={news.id}
+                                    onClick={() => navigate('/announcements')}
+                                    className="space-y-2 relative pl-4 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[2px] before:bg-primary/20 hover:before:bg-primary before:transition-colors cursor-pointer group"
+                                >
                                     <div className="flex items-center justify-between">
                                         <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-lg uppercase tracking-wide">{news.tag}</span>
                                         <span className="text-[10px] text-slate-400 font-bold">{news.date}</span>

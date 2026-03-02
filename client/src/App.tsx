@@ -13,6 +13,7 @@ import PaymentsPage from './pages/PaymentsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import MainLayout from './layouts/MainLayout';
 import LoadingScreen from './components/LoadingScreen';
+import LecturerManagement from './pages/LecturerManagement';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -55,6 +56,11 @@ const App: React.FC = () => {
                     <Route path="students" element={
                         <ProtectedRoute allowedRoles={['super_admin', 'lecturer']}>
                             <StudentManagement />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="lecturers" element={
+                        <ProtectedRoute allowedRoles={['super_admin']}>
+                            <LecturerManagement />
                         </ProtectedRoute>
                     } />
 

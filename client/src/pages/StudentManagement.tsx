@@ -37,6 +37,7 @@ interface Student {
     faculty: string;
     study_program: string;
     semester: number;
+    class_name: string;
     avatar_url?: string;
 }
 
@@ -45,12 +46,27 @@ const StudentManagement: React.FC = () => {
     const navigate = useNavigate();
     const [students, setStudents] = useState<Student[]>(() => {
         const saved = localStorage.getItem('sim_students');
-        if (saved) return JSON.parse(saved);
+        // We define normalization locally here since the helper is defined later
+        const normalize = (data: any[]) => data.map(s => {
+            let faculty = s.faculty || '';
+            let prodi = s.study_program || '';
+            if (faculty === 'Teknologi Informasi' || faculty === 'Teknik') {
+                faculty = 'Fakultas Teknik (FT)';
+                if (prodi === 'Informatika') prodi = 'Teknik Informatika (S1)';
+            } else if (faculty === 'Ekonomi & Bisnis') {
+                faculty = 'Fakultas Ekonomi dan Bisnis (FEB)';
+            }
+            const firstName = (s.full_name || '').trim().split(' ')[0].toLowerCase();
+            const email = (s.nim_nip && firstName) ? `${firstName}_${s.nim_nip}@student.ac.id` : s.email;
+            return { ...s, faculty, study_program: prodi, email, class_name: s.class_name || 'A' };
+        });
+
+        if (saved) return normalize(JSON.parse(saved));
         return [
-            { id: '1', full_name: 'Budi Raharjo', nim_nip: '2105001', email: 'budi@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 5 },
-            { id: '2', full_name: 'Siti Aminah', nim_nip: '2105002', email: 'siti@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Sistem Informasi (S1)', semester: 3 },
-            { id: '3', full_name: 'Andi Wijaya', nim_nip: '2105003', email: 'andi@student.ac.id', role: 'student', status: 'inactive', faculty: 'Fakultas Ekonomi dan Bisnis (FEB)', study_program: 'Manajemen (S1)', semester: 7 },
-            { id: '4', full_name: 'Dewi Lestari', nim_nip: '2105004', email: 'dewi@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 1 },
+            { id: '1', full_name: 'Budi Raharjo', nim_nip: '2105001', email: 'budi_2105001@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 5, class_name: 'A' },
+            { id: '2', full_name: 'Siti Aminah', nim_nip: '2105002', email: 'siti_2105002@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Sistem Informasi (S1)', semester: 3, class_name: 'B' },
+            { id: '3', full_name: 'Andi Wijaya', nim_nip: '2105003', email: 'andi_2105003@student.ac.id', role: 'student', status: 'inactive', faculty: 'Fakultas Ekonomi dan Bisnis (FEB)', study_program: 'Manajemen (S1)', semester: 7, class_name: 'A' },
+            { id: '4', full_name: 'Dewi Lestari', nim_nip: '2105004', email: 'dewi_2105004@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 1, class_name: 'C' },
         ];
     });
 
@@ -69,6 +85,29 @@ const StudentManagement: React.FC = () => {
         localStorage.setItem('sim_students', JSON.stringify(students));
     }, [students]);
 
+    const normalizeStudentData = (data: Student[]): Student[] => {
+        return data.map(s => {
+            let faculty = s.faculty || '';
+            let prodi = s.study_program || '';
+
+            // Normalize Faculty
+            if (faculty === 'Teknologi Informasi' || faculty === 'Teknik') {
+                faculty = 'Fakultas Teknik (FT)';
+                if (prodi === 'Informatika') prodi = 'Teknik Informatika (S1)';
+            } else if (faculty === 'Ekonomi & Bisnis') {
+                faculty = 'Fakultas Ekonomi dan Bisnis (FEB)';
+            }
+
+            // Normalize Email (namaadepan_nim@student.ac.id)
+            const firstName = (s.full_name || '').trim().split(' ')[0].toLowerCase();
+            const email = (s.nim_nip && firstName)
+                ? `${firstName}_${s.nim_nip}@student.ac.id`
+                : s.email;
+
+            return { ...s, faculty, study_program: prodi, email, class_name: s.class_name || 'A' };
+        });
+    };
+
     useEffect(() => {
         fetchStudents();
     }, []);
@@ -82,11 +121,14 @@ const StudentManagement: React.FC = () => {
                 .eq('role', 'student');
 
             if (!error && data && data.length > 0) {
-                // Merge DB data with local data or priorities DB
-                setStudents(data as Student[]);
+                setStudents(normalizeStudentData(data as Student[]));
+            } else {
+                // Also normalize local storage data if no DB data
+                setStudents(prev => normalizeStudentData(prev));
             }
         } catch (err) {
             console.error('Error fetching students:', err);
+            setStudents(prev => normalizeStudentData(prev));
         } finally {
             setLoading(false);
         }
@@ -116,30 +158,45 @@ const StudentManagement: React.FC = () => {
     const [formData, setFormData] = useState({
         full_name: '',
         nim_nip: '',
+        email: '',
         status: 'active' as 'active' | 'inactive',
         faculty: '',
         study_program: '',
-        semester: 1
+        semester: 1,
+        class_name: 'A'
     });
 
     useEffect(() => {
         if (selectedStudent) {
+            // Helper to migrate old faculty names to new labels
+            const getMigratedFaculty = (f: string) => {
+                if (f === 'Teknologi Informasi') return 'Fakultas Teknik (FT)';
+                if (f === 'Ekonomi & Bisnis') return 'Fakultas Ekonomi dan Bisnis (FEB)';
+                return f;
+            };
+
+            const migratedFaculty = getMigratedFaculty(selectedStudent.faculty || '');
+
             setFormData({
                 full_name: selectedStudent.full_name,
                 nim_nip: selectedStudent.nim_nip,
+                email: selectedStudent.email || '',
                 status: selectedStudent.status as any,
-                faculty: selectedStudent.faculty || '',
+                faculty: migratedFaculty,
                 study_program: selectedStudent.study_program || '',
-                semester: selectedStudent.semester || 1
+                semester: selectedStudent.semester || 1,
+                class_name: selectedStudent.class_name || 'A'
             });
         } else {
             setFormData({
                 full_name: '',
                 nim_nip: '',
+                email: '',
                 status: 'active',
                 faculty: '',
                 study_program: '',
-                semester: 1
+                semester: 1,
+                class_name: 'A'
             });
         }
     }, [selectedStudent, isAddModalOpen]);
@@ -150,22 +207,26 @@ const StudentManagement: React.FC = () => {
 
         if (selectedStudent) {
             // Update existing
-            setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, ...formData } : s));
+            const updatedStudent = { ...selectedStudent, ...formData };
+            setStudents(prev => prev.map(s => s.id === selectedStudent.id ? updatedStudent : s));
             try {
-                await supabase.from('profiles').update(formData).eq('id', selectedStudent.id);
+                // Pick only profile-related fields for profile update
+                const profileUpdate = {
+                    full_name: formData.full_name,
+                    nim_nip: formData.nim_nip,
+                    email: formData.email,
+                    status: formData.status
+                };
+                await supabase.from('profiles').update(profileUpdate).eq('id', selectedStudent.id);
+                // In a real system, you would also update the 'students' table here
             } catch (err) { console.error(err); }
         } else {
-            // Add new (Mock or Real)
+            const firstName = formData.full_name.trim().split(' ')[0].toLowerCase();
             const newStudent: Student = {
                 id: Math.random().toString(36).substr(2, 9),
-                full_name: formData.full_name,
-                nim_nip: formData.nim_nip,
-                email: formData.full_name.toLowerCase().replace(' ', '.') + '@student.ac.id',
-                role: 'student',
-                status: formData.status,
-                faculty: formData.faculty,
-                study_program: formData.study_program,
-                semester: formData.semester
+                ...formData,
+                email: formData.email || `${firstName}_${formData.nim_nip}@student.ac.id`,
+                role: 'student'
             };
             setStudents(prev => [newStudent, ...prev]);
         }
@@ -201,12 +262,17 @@ const StudentManagement: React.FC = () => {
         (filterStatus === 'all' || s.status === filterStatus)
     );
 
-    const displayStudents = filteredStudents.length > 0 ? filteredStudents : [
-        { id: '1', full_name: 'Budi Raharjo', nim_nip: '2105001', email: 'budi@student.ac.id', role: 'student', status: 'active', faculty: 'Teknologi Informasi', study_program: 'Informatika', semester: 5 },
-        { id: '2', full_name: 'Siti Aminah', nim_nip: '2105002', email: 'siti@student.ac.id', role: 'student', status: 'active', faculty: 'Teknologi Informasi', study_program: 'Sistem Informasi', semester: 3 },
-        { id: '3', full_name: 'Andi Wijaya', nim_nip: '2105003', email: 'andi@student.ac.id', role: 'student', status: 'inactive', faculty: 'Ekonomi & Bisnis', study_program: 'Manajemen', semester: 7 },
-        { id: '4', full_name: 'Dewi Lestari', nim_nip: '2105004', email: 'dewi@student.ac.id', role: 'student', status: 'active', faculty: 'Teknologi Informasi', study_program: 'Informatika', semester: 1 },
-    ] as Student[];
+    // If we have actual students in local state (from DB or manual add), use them. 
+    // Otherwise show the fallback list.
+    const displayStudents = (students.length > 0) ? filteredStudents : [
+        { id: '1', full_name: 'Budi Raharjo', nim_nip: '2105001', email: 'budi_2105001@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 5, class_name: 'A' },
+        { id: '2', full_name: 'Siti Aminah', nim_nip: '2105002', email: 'siti_2105002@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Sistem Informasi (S1)', semester: 3, class_name: 'B' },
+        { id: '3', full_name: 'Andi Wijaya', nim_nip: '2105003', email: 'andi_2105003@student.ac.id', role: 'student', status: 'inactive', faculty: 'Fakultas Ekonomi dan Bisnis (FEB)', study_program: 'Manajemen (S1)', semester: 7, class_name: 'A' },
+        { id: '4', full_name: 'Dewi Lestari', nim_nip: '2105004', email: 'dewi_2105004@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 1, class_name: 'C' },
+    ].filter(s =>
+        (s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || s.nim_nip.includes(searchTerm)) &&
+        (filterStatus === 'all' || s.status === filterStatus)
+    ) as Student[];
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -363,7 +429,10 @@ const StudentManagement: React.FC = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-sm font-black text-slate-700 dark:text-slate-200">
-                                        Semester {student.semester}
+                                        <div className="flex flex-col">
+                                            <span>Semester {student.semester}</span>
+                                            <span className="text-[10px] text-primary/70 font-bold uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded-lg w-fit mt-1">Kelas {student.class_name}</span>
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
@@ -437,7 +506,7 @@ const StudentManagement: React.FC = () => {
                             </div>
                             <form
                                 onSubmit={handleSave}
-                                className="p-8 space-y-6"
+                                className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar"
                             >
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Nama Lengkap</label>
@@ -447,6 +516,16 @@ const StudentManagement: React.FC = () => {
                                         onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 outline-none focus:border-primary/50 transition-all font-bold text-sm"
                                         placeholder="Contoh: Ahmad Wijaya"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Email</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 outline-none focus:border-primary/50 transition-all font-bold text-sm"
+                                        placeholder="ahmad@student.ac.id"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -471,6 +550,18 @@ const StudentManagement: React.FC = () => {
                                             min="1"
                                             max="14"
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Kelas</label>
+                                        <select
+                                            value={formData.class_name}
+                                            onChange={(e) => setFormData({ ...formData, class_name: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 outline-none focus:border-primary/50 transition-all font-bold text-sm cursor-pointer"
+                                        >
+                                            {['A', 'B', 'C', 'D', 'RPL'].map(c => (
+                                                <option key={c} value={c}>Kelas {c}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4">
