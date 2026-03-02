@@ -29,17 +29,28 @@ const MainLayout: React.FC = () => {
     };
 
     const navItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['super_admin', 'lecturer', 'student'] },
-        { name: 'Mahasiswa', icon: Users, path: '/students', roles: ['super_admin', 'lecturer'] },
-        { name: 'Dosen', icon: Users, path: '/lecturers', roles: ['super_admin'] },
-        { name: 'Daftar Matkul', icon: BookOpen, path: '/courses', roles: ['lecturer'] },
-        { name: 'KRS', icon: BookOpen, path: '/krs', roles: ['super_admin', 'lecturer', 'student'] },
-        { name: 'Verifikasi KRS', icon: ClipboardCheck, path: '/krs-verification', roles: ['lecturer'] },
-        { name: 'Akademik', icon: School, path: '/academic', roles: ['super_admin', 'lecturer', 'student'] },
-        { name: 'Penilaian', icon: GraduationCap, path: '/grades', roles: ['super_admin', 'lecturer', 'student'] },
-        { name: 'Presensi', icon: ClipboardCheck, path: '/attendance', roles: ['super_admin', 'lecturer', 'student'] },
-        { name: 'Pembayaran', icon: CreditCard, path: '/payments', roles: ['super_admin', 'student'] },
-        { name: 'Pengumuman', icon: Bell, path: '/announcements', roles: ['super_admin', 'lecturer', 'student'] },
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan'] },
+
+        // Superadmin & Akademik
+        { name: 'Manajemen Mahasiswa', icon: Users, path: '/students', roles: ['superadmin', 'akademik'] },
+        { name: 'Manajemen Dosen', icon: Users, path: '/lecturers', roles: ['superadmin'] },
+        { name: 'Sistem Akademik', icon: School, path: '/academic', roles: ['superadmin', 'akademik'] },
+        { name: 'Verifikasi KRS', icon: ClipboardCheck, path: '/krs-verification', roles: ['superadmin', 'akademik'] },
+
+        // Dosen
+        { name: 'Kelas Saya', icon: BookOpen, path: '/my-classes', roles: ['dosen'] },
+        { name: 'Input Nilai', icon: GraduationCap, path: '/input-grades', roles: ['dosen'] },
+
+        // Mahasiswa
+        { name: 'KRS Online', icon: BookOpen, path: '/krs', roles: ['mahasiswa', 'superadmin'] },
+        { name: 'Kurikulum', icon: School, path: '/curriculum', roles: ['superadmin', 'akademik'] },
+
+        // Keuangan
+        { name: 'Tagihan & SPP', icon: CreditCard, path: '/payments', roles: ['mahasiswa', 'keuangan'] },
+        { name: 'Verifikasi Bayar', icon: ClipboardCheck, path: '/payment-verification', roles: ['superadmin', 'keuangan'] },
+
+        // Universal
+        { name: 'Pengumuman', icon: Bell, path: '/announcements', roles: ['superadmin', 'dosen', 'akademik', 'keuangan'] },
     ];
 
     const filteredNavItems = navItems.filter(item =>
@@ -160,8 +171,15 @@ const MainLayout: React.FC = () => {
                                     exit={{ opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{profile?.full_name || 'Loading...'}</p>
-                                    <p className="text-xs text-slate-500 truncate capitalize">{profile?.role || 'User'}</p>
+                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{profile?.full_name || 'Memuat...'}</p>
+                                    <p className="text-xs text-slate-500 truncate capitalize">{
+                                        profile?.role === 'superadmin' ? 'Super Admin' :
+                                            profile?.role === 'mahasiswa' ? 'Mahasiswa' :
+                                                profile?.role === 'dosen' ? 'Dosen' :
+                                                    profile?.role === 'akademik' ? 'Staff Akademik' :
+                                                        profile?.role === 'keuangan' ? 'Staff Keuangan' :
+                                                            profile?.role || 'User'
+                                    }</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>

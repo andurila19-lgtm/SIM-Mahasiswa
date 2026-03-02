@@ -26,6 +26,7 @@ import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 import { ACADEMIC_DATA } from '../config/academicData';
 import { saveAs } from 'file-saver';
+import Toast, { ToastType } from '../components/Toast';
 
 interface Student {
     id: string;
@@ -62,12 +63,7 @@ const StudentManagement: React.FC = () => {
         });
 
         if (saved) return normalize(JSON.parse(saved));
-        return [
-            { id: '1', full_name: 'Budi Raharjo', nim_nip: '2105001', email: 'budi_2105001@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 5, class_name: 'A' },
-            { id: '2', full_name: 'Siti Aminah', nim_nip: '2105002', email: 'siti_2105002@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Sistem Informasi (S1)', semester: 3, class_name: 'B' },
-            { id: '3', full_name: 'Andi Wijaya', nim_nip: '2105003', email: 'andi_2105003@student.ac.id', role: 'student', status: 'inactive', faculty: 'Fakultas Ekonomi dan Bisnis (FEB)', study_program: 'Manajemen (S1)', semester: 7, class_name: 'A' },
-            { id: '4', full_name: 'Dewi Lestari', nim_nip: '2105004', email: 'dewi_2105004@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 1, class_name: 'C' },
-        ];
+        return [];
     });
 
     const [loading, setLoading] = useState(true);
@@ -79,6 +75,17 @@ const StudentManagement: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+    // Toast state
+    const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: ToastType }>({
+        isOpen: false,
+        message: '',
+        type: 'success'
+    });
+
+    const showToast = (message: string, type: ToastType = 'success') => {
+        setToast({ isOpen: true, message, type });
+    };
 
     // Persist to LocalStorage whenever students list changes
     useEffect(() => {
@@ -118,16 +125,18 @@ const StudentManagement: React.FC = () => {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('role', 'student')
+                .eq('role', 'mahasiswa')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
-            if (data && data.length > 0) {
+            if (data) {
+                // Once we have data (even an empty array), we trust the DB and clear mock/local data
                 setStudents(normalizeStudentData(data as Student[]));
-            } else {
-                // If DB is genuinely empty, keep mock data but only if first load
-                setStudents(prev => prev.length === 0 ? [] : prev);
+                // Clear from localStorage if DB returns empty to sync deletion across sessions
+                if (data.length === 0) {
+                    localStorage.removeItem('sim_students');
+                }
             }
         } catch (err) {
             console.error('Error fetching students:', err);
@@ -150,10 +159,16 @@ const StudentManagement: React.FC = () => {
                 .eq('id', selectedStudent.id);
 
             if (error) throw error;
-            console.log('Student deleted successfully');
-        } catch (err) {
+
+            // Success notification or log
+            console.log('Student deleted successfully from Supabase');
+        } catch (err: any) {
             console.error('Error deleting student:', err);
-            fetchStudents(); // Revert on error
+            // Revert state if sync fails
+            showToast(`Gagal menghapus: ${err.message || 'Izin ditolak'}`, 'error');
+            fetchStudents();
+        } finally {
+            setSelectedStudent(null);
         }
     };
 
@@ -243,7 +258,7 @@ const StudentManagement: React.FC = () => {
                     id: newId,
                     ...formData,
                     email: newEmail,
-                    role: 'student'
+                    role: 'mahasiswa'
                 };
 
                 const { error } = await supabase
@@ -257,10 +272,10 @@ const StudentManagement: React.FC = () => {
 
             setIsAddModalOpen(false);
             setSelectedStudent(null);
-            alert(selectedStudent ? 'Data berhasil diperbarui!' : 'Mahasiswa berhasil ditambahkan!');
+            showToast(selectedStudent ? 'Data berhasil diperbarui!' : 'Mahasiswa berhasil ditambahkan!');
         } catch (err: any) {
             console.error('Error saving student:', err);
-            alert('Gagal menyimpan data: ' + (err.message || 'Terjadi kesalahan sistem'));
+            showToast('Gagal menyimpan data: ' + (err.message || 'Terjadi kesalahan sistem'), 'error');
         } finally {
             setLoading(false);
         }
@@ -293,17 +308,7 @@ const StudentManagement: React.FC = () => {
         (filterStatus === 'all' || s.status === filterStatus)
     );
 
-    // If we have actual students in local state (from DB or manual add), use them. 
-    // Otherwise show the fallback list.
-    const displayStudents = (students.length > 0) ? filteredStudents : [
-        { id: '1', full_name: 'Budi Raharjo', nim_nip: '2105001', email: 'budi_2105001@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 5, class_name: 'A' },
-        { id: '2', full_name: 'Siti Aminah', nim_nip: '2105002', email: 'siti_2105002@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Sistem Informasi (S1)', semester: 3, class_name: 'B' },
-        { id: '3', full_name: 'Andi Wijaya', nim_nip: '2105003', email: 'andi_2105003@student.ac.id', role: 'student', status: 'inactive', faculty: 'Fakultas Ekonomi dan Bisnis (FEB)', study_program: 'Manajemen (S1)', semester: 7, class_name: 'A' },
-        { id: '4', full_name: 'Dewi Lestari', nim_nip: '2105004', email: 'dewi_2105004@student.ac.id', role: 'student', status: 'active', faculty: 'Fakultas Teknik (FT)', study_program: 'Teknik Informatika (S1)', semester: 1, class_name: 'C' },
-    ].filter(s =>
-        (s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || s.nim_nip.includes(searchTerm)) &&
-        (filterStatus === 'all' || s.status === filterStatus)
-    ) as Student[];
+    const displayStudents = filteredStudents;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -625,15 +630,15 @@ const StudentManagement: React.FC = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Semester</label>
-                                        <input
-                                            type="number"
+                                        <select
                                             value={formData.semester}
                                             onChange={(e) => setFormData({ ...formData, semester: parseInt(e.target.value) })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 outline-none focus:border-primary/50 transition-all font-bold text-sm"
-                                            placeholder="1"
-                                            min="1"
-                                            max="14"
-                                        />
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 outline-none focus:border-primary/50 transition-all font-bold text-sm cursor-pointer"
+                                        >
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(s => (
+                                                <option key={s} value={s}>Semester {s}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Kelas</label>
@@ -719,6 +724,13 @@ const StudentManagement: React.FC = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+            />
         </div>
     );
 };

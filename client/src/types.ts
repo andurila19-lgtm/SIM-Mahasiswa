@@ -1,7 +1,7 @@
 export interface Profile {
     id: string;
     full_name: string;
-    role: 'super_admin' | 'lecturer' | 'student';
+    role: 'superadmin' | 'mahasiswa' | 'dosen' | 'akademik' | 'keuangan';
     nim_nip?: string;
     email: string;
     phone?: string;

@@ -30,12 +30,7 @@ interface Transaction {
 const PaymentsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('active');
 
-    const mockTransactions: Transaction[] = [
-        { id: 1, title: 'UKT Semester Genap 2023/2024', amount: 'Rp 4.500.000', date: '15 Feb 2026', status: 'success', method: 'VA BNI' },
-        { id: 2, title: 'Biaya Praktikum Web II', amount: 'Rp 250.000', date: '10 Feb 2026', status: 'success', method: 'VA BNI' },
-        { id: 3, title: 'Iuran Kemahasiswaan', amount: 'Rp 100.000', date: '05 Feb 2026', status: 'success', method: 'VA BNI' },
-        { id: 4, title: 'Denda Keterlambatan KRS', amount: 'Rp 50.000', date: '01 Feb 2026', status: 'pending', method: 'VA BNI' },
-    ];
+    const mockTransactions: Transaction[] = [];
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">

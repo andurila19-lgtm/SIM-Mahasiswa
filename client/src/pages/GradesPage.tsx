@@ -31,14 +31,7 @@ interface Grade {
 const GradesPage: React.FC = () => {
     const [activeSemester, setActiveSemester] = useState(6);
 
-    const mockGrades: Grade[] = [
-        { id: 1, code: 'TI501', name: 'Sistem Basis Data', sks: 3, grade_letter: 'A', grade_point: 4.0, lecturer: 'Ir. Budi Santoso' },
-        { id: 2, code: 'TI502', name: 'Jaringan Komputer', sks: 3, grade_letter: 'B+', grade_point: 3.5, lecturer: 'Hendro Wijaya, M.T' },
-        { id: 3, code: 'TI503', name: 'Matematika Diskrit', sks: 2, grade_letter: 'A', grade_point: 4.0, lecturer: 'Dr. Maria Ulfa' },
-        { id: 4, code: 'TI504', name: 'Sistem Operasi', sks: 3, grade_letter: 'A-', grade_point: 3.75, lecturer: 'Dr. Ahmad Subarjo' },
-        { id: 5, code: 'TI505', name: 'Pancasila & Kewarganegaraan', sks: 2, grade_letter: 'A', grade_point: 4.0, lecturer: 'Hj. Ratna Sari, M.H' },
-        { id: 6, code: 'TI506', name: 'Analisis Desain Sistem', sks: 3, grade_letter: 'B', grade_point: 3.0, lecturer: 'Prof. Bambang Pamungkas' },
-    ];
+    const mockGrades: Grade[] = [];
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -73,7 +66,7 @@ const GradesPage: React.FC = () => {
                             <Star size={20} className="fill-primary" />
                         </div>
                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Indeks Prestasi Kumulatif</p>
-                        <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">3.82</h3>
+                        <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">0.00</h3>
                         <div className="flex items-center gap-2 text-green-500 font-bold text-xs bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-xl border border-green-100 dark:border-transparent w-fit">
                             <ArrowUpRight size={14} />
                             Top 5% Angkatan
@@ -83,17 +76,17 @@ const GradesPage: React.FC = () => {
 
                     <div className="bg-slate-900 rounded-3xl p-8 border border-white/5 shadow-2xl overflow-hidden relative group">
                         <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1">Total SKS Lulus</p>
-                        <h3 className="text-4xl font-black text-white mb-8">108 <span className="text-sm font-bold text-slate-500 italic">/ 144</span></h3>
+                        <h3 className="text-4xl font-black text-white mb-8">0 <span className="text-sm font-bold text-slate-500 italic">/ 0</span></h3>
 
                         <div className="space-y-4">
                             <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 <span>Progres Kelulusan</span>
-                                <span className="text-primary">75%</span>
+                                <span className="text-primary">0%</span>
                             </div>
                             <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                                 <motion.div
                                     initial={{ width: 0 }}
-                                    animate={{ width: "75%" }}
+                                    animate={{ width: "0%" }}
                                     transition={{ duration: 1.5, ease: "easeOut" }}
                                     className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full"
                                 />
@@ -159,9 +152,9 @@ const GradesPage: React.FC = () => {
                         </div>
 
                         <div className="p-8 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs bg-slate-50/10">
-                            <p className="text-slate-500 font-medium italic">Menampilkan 6 mata kuliah tervalidasi. <span className="not-italic font-bold text-primary cursor-pointer hover:underline uppercase tracking-tighter">Lihat Seluruh Semester</span></p>
+                            <p className="text-slate-500 font-medium italic">Menampilkan 0 mata kuliah tervalidasi. <span className="not-italic font-bold text-primary cursor-pointer hover:underline uppercase tracking-tighter">Lihat Seluruh Semester</span></p>
                             <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg scale-90 opacity-80"><Zap size={14} /> IP Semester: 3.75</span>
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg scale-90 opacity-80"><Zap size={14} /> IP Semester: 0.00</span>
                             </div>
                         </div>
                     </div>

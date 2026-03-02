@@ -35,13 +35,7 @@ interface AttendanceRecord {
 const AttendancePage: React.FC = () => {
     const [activeView, setActiveView] = useState('list');
 
-    const mockAttendance: AttendanceRecord[] = [
-        { id: 1, subject: 'Pemrograman Web II', lecturer: 'Dr. Ahmad Subarjo', date: '2 Mar 2026', time: '08:00 - 10:00', status: 'present', meeting: 10 },
-        { id: 2, subject: 'Kecerdasan Buatan', lecturer: 'Ir. Budi Santoso', date: '24 Feb 2026', time: '13:00 - 15:00', status: 'present', meeting: 9 },
-        { id: 3, subject: 'Audit Sistem Informasi', lecturer: 'Hendro Wijaya, M.T', date: '23 Feb 2026', time: '15:00 - 17:00', status: 'absent', meeting: 8 },
-        { id: 4, subject: 'Pemrograman Web II', lecturer: 'Dr. Ahmad Subarjo', date: '19 Feb 2026', time: '08:00 - 10:00', status: 'present', meeting: 9 },
-        { id: 5, subject: 'Metodologi Penelitian', lecturer: 'Dr. Maria Ulfa', date: '12 Feb 2026', time: '08:00 - 10:00', status: 'late', meeting: 7 },
-    ];
+    const mockAttendance: AttendanceRecord[] = [];
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -72,7 +66,7 @@ const AttendancePage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Kehadiran (IP)</p>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">92.4%</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">0%</p>
                     </div>
                     <div className="absolute top-2 right-2 text-green-500 opacity-5 group-hover:opacity-10 transition-all duration-700">
                         <TrendingUp size={64} />
@@ -85,7 +79,7 @@ const AttendancePage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hadir (Sesi)</p>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">48 Sesi</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">0 Sesi</p>
                     </div>
                 </motion.div>
 
@@ -95,7 +89,7 @@ const AttendancePage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Terlambat</p>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">3 Sesi</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">0 Sesi</p>
                     </div>
                 </motion.div>
 
@@ -105,7 +99,7 @@ const AttendancePage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Alpa/Absen</p>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">1 Sesi</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">0 Sesi</p>
                     </div>
                 </motion.div>
             </div>

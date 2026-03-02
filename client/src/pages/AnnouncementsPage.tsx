@@ -35,43 +35,7 @@ const AnnouncementsPage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
-    const mockAnnouncements: Post[] = [
-        {
-            id: 1,
-            title: 'Pembayaran UKT Semester Genap 2023/2024',
-            category: 'Keuangan',
-            date: '2 Mar 2026',
-            author: 'Bagian Keuangan',
-            content: 'Informasi perpanjangan batas akhir pembayaran UKT mahasiswa reguler hingga 15 Maret 2026. Harap segera melakukan validasi di bank terkait. Pastikan Anda menyimpan bukti pembayaran untuk validasi manual jika portal tidak update secara otomatis.',
-            isPinned: true,
-            image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=400'
-        },
-        {
-            id: 2,
-            title: 'Sosialisasi Program MBKM Angkatan 5 Tahap II',
-            category: 'Akademik',
-            date: '28 Feb 2026',
-            author: 'Kemahasiswaan',
-            content: 'Pendaftaran program Magang Merdeka dan Studi Independen bersertifikat telah dibuka. Segera lengkapi berkas administrasi Anda. Program ini menawarkan konversi hingga 20 SKS untuk pengalaman kerja di industri mitra ternama.',
-            isPinned: true
-        },
-        {
-            id: 3,
-            title: 'Workshop Cyber Security & Penetration Testing',
-            category: 'Event',
-            date: '25 Feb 2026',
-            author: 'Hima IF',
-            content: 'Himpunan Mahasiswa Informatika mengundang seluruh mahasiswa untuk hadir dalam workshop keamanan siber tingkat lanjut. Materi mencakup OWASP Top 10, Network Security, dan Digital Forensics.'
-        },
-        {
-            id: 4,
-            title: 'Pemeliharaan Sistem Portal Akademik (Maintenance)',
-            category: 'Sistem',
-            date: '22 Feb 2026',
-            author: 'Unit IT',
-            content: 'Portal akan mengalami gangguan akses pada pukul 22:00 - 02:00 WIB untuk pemeliharaan rutin server database. Harap selesaikan penginputan data sebelum waktu yang ditentukan.'
-        },
-    ];
+    const mockAnnouncements: Post[] = [];
 
     const filteredAnnouncements = mockAnnouncements.filter(post => {
         const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

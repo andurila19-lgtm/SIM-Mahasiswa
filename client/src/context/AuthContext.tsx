@@ -45,8 +45,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         if (!error && data) {
                             console.log('AuthContext: Profile loaded successfully:', data.full_name);
                             setProfile(data as Profile);
-                        } else if (error) {
-                            console.error('AuthContext: Supabase error (profile fetch):', error.message);
+                        } else if (error || !data) {
+                            console.warn('AuthContext: Profile not found, checking if it is a demo account...');
+                            // Auto-seed for demo accounts
+                            const demoEmails: Record<string, any> = {
+                                'superadmin@sim.ac.id': { full_name: 'Super Admin', role: 'superadmin', nim_nip: 'ADM001' },
+                                'mahasiswa@sim.ac.id': { full_name: 'Budi Raharjo', role: 'mahasiswa', nim_nip: '2105001' },
+                                'dosen@sim.ac.id': { full_name: 'Dr. Ahmad Subarjo', role: 'dosen', nim_nip: 'DSN001' },
+                                'akademik@sim.ac.id': { full_name: 'Staff Akademik', role: 'akademik', nim_nip: 'AKD001' },
+                                'keuangan@sim.ac.id': { full_name: 'Staff Keuangan', role: 'keuangan', nim_nip: 'KEU001' },
+                            };
+
+                            if (currentUser.email && demoEmails[currentUser.email]) {
+                                console.log('AuthContext: Seeding demo profile for:', currentUser.email);
+                                const demoData = demoEmails[currentUser.email];
+                                const { data: newProfile, error: seedError } = await supabase
+                                    .from('profiles')
+                                    .upsert({
+                                        id: currentUser.uid,
+                                        email: currentUser.email,
+                                        status: 'active',
+                                        ...demoData
+                                    })
+                                    .select()
+                                    .single();
+
+                                if (!seedError && newProfile) {
+                                    console.log('AuthContext: Demo profile seeded successfully');
+                                    setProfile(newProfile as Profile);
+                                } else {
+                                    console.error('AuthContext: Failed to seed demo profile:', seedError?.message);
+                                }
+                            } else {
+                                console.error('AuthContext: Profile not found and not a demo account');
+                            }
                         }
                     }
                 } catch (e) {

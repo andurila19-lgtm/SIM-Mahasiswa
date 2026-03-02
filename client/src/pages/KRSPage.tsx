@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
 import { ACADEMIC_DATA } from '../config/academicData';
 import SuccessNotification from '../components/SuccessNotification';
+import Toast, { ToastType } from '../components/Toast';
 
 interface Course {
     id: string;
@@ -53,61 +54,18 @@ const KRSPage: React.FC = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
-    const mockAvailableCourses: Course[] = [
-        // === Semester 1 - Teknik Informatika (S1) ===
-        { id: 'ti101', code: 'TI101', name: 'Pengantar Teknologi Informasi', sks: 2, semester: 1, lecturer: 'Dian Nugraha, M.T', schedule: 'Senin, 08:00 - 10:00', room: 'R. Teori 101', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti102', code: 'TI102', name: 'Logika Matematika', sks: 3, semester: 1, lecturer: 'Dr. Irwan Setiawan', schedule: 'Selasa, 08:00 - 10:30', room: 'R. Teori 302', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti103', code: 'TI103', name: 'Algoritma Pemrograman I', sks: 4, semester: 1, lecturer: 'Hendi Suhendi, M.Kom', schedule: 'Rabu, 08:00 - 11:30', room: 'Lab Komp 01', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti104', code: 'TI104', name: 'Bahasa Indonesia', sks: 2, semester: 1, lecturer: 'Siska Putri, M.Hum', schedule: 'Kamis, 08:00 - 10:00', room: 'R. Teori 102', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti105', code: 'TI105', name: 'Pendidikan Agama', sks: 2, semester: 1, lecturer: 'Drs. H. Ahmad', schedule: 'Jumat, 08:00 - 10:00', room: 'R. Teori 201', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti106', code: 'TI106', name: 'Arsitektur & Org. Komputer', sks: 3, semester: 1, lecturer: 'Prasetyo Adi, M.T', schedule: 'Senin, 10:30 - 13:00', room: 'R. Teori 201', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti107', code: 'TI107', name: 'Bahasa Inggris I', sks: 2, semester: 1, lecturer: 'Mr. John Watson', schedule: 'Selasa, 10:30 - 12:30', room: 'R. Teori 105', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti108', code: 'TI108', name: 'Kalkulus I', sks: 3, semester: 1, lecturer: 'Prof. Suparman', schedule: 'Rabu, 13:00 - 15:30', room: 'R. Teori 305', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
+    // Toast state
+    const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: ToastType }>({
+        isOpen: false,
+        message: '',
+        type: 'success'
+    });
 
-        // === Semester 2 - Teknik Informatika (S1) ===
-        { id: 'ti201', code: 'TI201', name: 'Algoritma & Struktur Data', sks: 4, semester: 2, lecturer: 'Hendi Suhendi, M.Kom', schedule: 'Senin, 08:00 - 11:30', room: 'Lab Komp 01', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti202', code: 'TI202', name: 'Matematika Diskrit', sks: 3, semester: 2, lecturer: 'Dr. Irwan Setiawan', schedule: 'Selasa, 10:00 - 12:30', room: 'R. Teori 302', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti203', code: 'TI203', name: 'Arsitektur Komputer Lanjut', sks: 3, semester: 2, lecturer: 'Prasetyo Adi, M.T', schedule: 'Rabu, 08:00 - 10:30', room: 'R. Teori 201', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti204', code: 'TI204', name: 'Pemrograman Berorientasi Objek', sks: 4, semester: 2, lecturer: 'Yulia Safitri, M.Kom', schedule: 'Kamis, 13:00 - 16:30', room: 'Lab Komp 02', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti205', code: 'TI205', name: 'Basis Data Dasar', sks: 3, semester: 2, lecturer: 'Hadi Prasetyo, M.T', schedule: 'Jumat, 10:00 - 12:30', room: 'Lab Komp 03', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti206', code: 'TI206', name: 'Sistem Operasi', sks: 3, semester: 2, lecturer: 'Dr. Eng. Wahyudi', schedule: 'Senin, 13:00 - 15:30', room: 'R. Teori 305', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti207', code: 'TI207', name: 'Bahasa Inggris TI', sks: 2, semester: 2, lecturer: 'Siska Putri, M.Hum', schedule: 'Selasa, 08:00 - 10:00', room: 'R. Teori 102', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
+    const showToast = (message: string, type: ToastType = 'success') => {
+        setToast({ isOpen: true, message, type });
+    };
 
-        // === Semester 3 - Sistem Informasi (S1) ===
-        { id: 'si301', code: 'SI301', name: 'Sistem Informasi Manajemen', sks: 3, semester: 3, lecturer: 'Hendro Wijaya, M.T', schedule: 'Senin, 08:00 - 10:30', room: 'R. Teori 202', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-        { id: 'si302', code: 'SI302', name: 'Desain Basis Data', sks: 3, semester: 3, lecturer: 'Dr. Ratna Dewi', schedule: 'Selasa, 10:00 - 12:30', room: 'Lab Komp 04', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-        { id: 'si303', code: 'SI303', name: 'Analisis Sistem Informasi', sks: 4, semester: 3, lecturer: 'Taufik Hidayat, M.T', schedule: 'Rabu, 13:00 - 16:30', room: 'R. Teori 204', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-        { id: 'si304', code: 'SI304', name: 'Statistik Probabilitas', sks: 3, semester: 3, lecturer: 'Andri Laksana, M.Si', schedule: 'Kamis, 08:00 - 10:30', room: 'R. Teori 205', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-        { id: 'si305', code: 'SI305', name: 'Pemrograman Web I', sks: 3, semester: 3, lecturer: 'Siska Putri, M.Kom', schedule: 'Jumat, 13:00 - 15:30', room: 'Lab Komp 01', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-        { id: 'si306', code: 'SI306', name: 'Komunikasi Bisnis', sks: 3, semester: 3, lecturer: 'Hj. Ratna Sari, M.H', schedule: 'Sabtu, 08:00 - 10:30', room: 'R. Teori 301', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-        { id: 'si307', code: 'SI307', name: 'Ekonomi Manajerial', sks: 2, semester: 3, lecturer: 'Drs. Supriyadi, M.M', schedule: 'Senin, 13:00 - 15:00', room: 'R. Teori 305', prodi: 'Sistem Informasi (S1)', class_name: 'A' },
-
-        // === Semester 5 - Teknik Informatika (S1) ===
-        { id: 'ti501', code: 'TI501', name: 'Kecerdasan Buatan', sks: 3, semester: 5, lecturer: 'Ir. Budi Santoso, M.Kom', schedule: 'Senin, 08:00 - 10:30', room: 'R. Teori 304', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti502', code: 'TI502', name: 'Jaringan Komputer', sks: 3, semester: 5, lecturer: 'Dr. Eng. Wahyudi', schedule: 'Selasa, 13:00 - 15:30', room: 'Lab Komp 01', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti503', code: 'TI503', name: 'Rekayasa Perangkat Lunak', sks: 4, semester: 5, lecturer: 'Dr. Irwan Setiawan', schedule: 'Rabu, 08:00 - 11:30', room: 'R. Teori 305', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti504', code: 'TI504', name: 'Pemrograman Mobile', sks: 3, semester: 5, lecturer: 'Yulia Safitri, M.Kom', schedule: 'Kamis, 10:00 - 12:30', room: 'Lab Komp 03', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti505', code: 'TI505', name: 'Metode Numerik', sks: 3, semester: 5, lecturer: 'Prof. Suparman', schedule: 'Jumat, 13:00 - 15:30', room: 'R. Teori 401', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti506', code: 'TI506', name: 'Grafika Komputer', sks: 3, semester: 5, lecturer: 'Hendi Suhendi, M.Kom', schedule: 'Senin, 13:00 - 15:30', room: 'Lab Komp 02', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-        { id: 'ti507', code: 'TI507', name: 'Manajemen Proyek TI', sks: 2, semester: 5, lecturer: 'Dr. Ahmad Subarjo', schedule: 'Selasa, 08:00 - 10:00', room: 'R. Teori 302', prodi: 'Teknik Informatika (S1)', class_name: 'A' },
-
-        // === Semester 7 - Manajemen (S1) ===
-        { id: 'mn701', code: 'MN701', name: 'Manajemen Strategis', sks: 3, semester: 7, lecturer: 'Prof. Bambang Pamungkas', schedule: 'Senin, 08:00 - 10:30', room: 'R. Teori 305', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: 'mn702', code: 'MN702', name: 'Etika Bisnis', sks: 2, semester: 7, lecturer: 'Hj. Ratna Sari, M.H', schedule: 'Selasa, 10:00 - 12:00', room: 'R. Teori 101', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: 'mn703', code: 'MN703', name: 'Manajemen Risiko', sks: 3, semester: 7, lecturer: 'Mulyadi, M.Acc', schedule: 'Rabu, 13:00 - 15:30', room: 'R. Teori 401', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: 'mn704', code: 'MN704', name: 'Kewirausahaan Lanjut', sks: 3, semester: 7, lecturer: 'Dr. Maria Ulfa', schedule: 'Kamis, 08:00 - 10:30', room: 'R. Teori 301', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: 'mn705', code: 'MN705', name: 'Metodologi Penelitian Manajemen', sks: 4, semester: 7, lecturer: 'Prof. Dr. Suhardi', schedule: 'Jumat, 13:00 - 16:30', room: 'R. Pasca 01', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: 'mn706', code: 'MN706', name: 'Seminar Manajemen', sks: 3, semester: 7, lecturer: 'Hendro Wijaya, M.T', schedule: 'Sabtu, 08:00 - 10:30', room: 'R. Teori 205', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: 'mn707', code: 'MN707', name: 'Inovasi & Perubahan', sks: 3, semester: 7, lecturer: 'Andri Laksana, M.Si', schedule: 'Senin, 13:00 - 15:30', room: 'R. Teori 204', prodi: 'Manajemen (S1)', class_name: 'A' },
-
-        { id: '4', code: 'FK101', name: 'Dasar Konseling', sks: 2, semester: 2, lecturer: 'Dr. Maria Ulfa', schedule: 'Kamis, 10:00 - 12:30', room: 'Lab Konsul', prodi: 'Bimbingan dan Konseling (S1)', class_name: 'C' },
-        { id: '5', code: 'EB105', name: 'Pengantar Manajemen', sks: 2, semester: 2, lecturer: 'Hj. Ratna Sari, M.H', schedule: 'Jumat, 10:00 - 12:30', room: 'R. Teori 101', prodi: 'Manajemen (S1)', class_name: 'A' },
-        { id: '7', code: 'EB201', name: 'Akuntansi Biaya', sks: 3, semester: 4, lecturer: 'Mulyadi, M.Acc', schedule: 'Senin, 13:00 - 15:30', room: 'R. Teori 401', prodi: 'Akuntansi (S1)', class_name: 'A' },
-        { id: '8', code: 'FS101', name: 'Farmakologi Dasar', sks: 3, semester: 2, lecturer: 'Apt. Sari Endah, M.Farm', schedule: 'Selasa, 08:00 - 10:30', room: 'Lab Farmasi', prodi: 'Farmasi (S1)', class_name: 'A' },
-        { id: '9', code: 'HK101', name: 'Hukum Perdata', sks: 4, semester: 2, lecturer: 'Dr. Hotman Paris, S.H', schedule: 'Rabu, 13:00 - 16:30', room: 'R. Teori 501', prodi: 'Hukum (S1)', class_name: 'B' },
-        { id: '10', code: 'PB601', name: 'Advanced Grammar', sks: 2, semester: 6, lecturer: 'Mr. John Doe', schedule: 'Kamis, 08:00 - 10:00', room: 'R. Bahasa', prodi: 'Pendidikan Bahasa Inggris (S1)', class_name: 'A' },
-        { id: '11', code: 'PD701', name: 'Metodologi Penelitian', sks: 3, semester: 1, lecturer: 'Prof. Dr. Suhardi', schedule: 'Sabtu, 13:00 - 15:30', room: 'R. Pasca 01', prodi: 'Pendidikan Dasar (S2)', class_name: 'C' },
-    ];
+    const mockAvailableCourses: Course[] = [];
 
     // Persist KRS per student
     useEffect(() => {
@@ -156,7 +114,7 @@ const KRSPage: React.FC = () => {
 
     const handleAjukanKRS = () => {
         if (selectedCourses.length === 0) {
-            alert('Silakan pilih mata kuliah terlebih dahulu.');
+            showToast('Silakan pilih mata kuliah terlebih dahulu.', 'error');
             return;
         }
         setKrsStatus('pending');
@@ -184,7 +142,7 @@ const KRSPage: React.FC = () => {
             setSelectedCourses(selectedCourses.filter(c => c.id !== course.id));
         } else {
             if (totalSKS + course.sks > 24) {
-                alert('Maksimal SKS yang dapat diambil adalah 24 SKS.');
+                showToast('Maksimal SKS yang dapat diambil adalah 24 SKS.', 'error');
                 return;
             }
             setSelectedCourses([...selectedCourses, course]);
@@ -315,7 +273,7 @@ const KRSPage: React.FC = () => {
                                 Mata Kuliah Tersedia
                             </h3>
                             <button
-                                onClick={() => alert('Fitur Tambah Matkul Baru sedang dikembangkan.')}
+                                onClick={() => showToast('Fitur Tambah Matkul Baru sedang dikembangkan.', 'info')}
                                 className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
                             >
                                 <Plus size={14} /> Tambah Matkul
@@ -526,6 +484,12 @@ const KRSPage: React.FC = () => {
                 isOpen={showSuccess}
                 message={successMessage}
                 onClose={() => setShowSuccess(false)}
+            />
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, isOpen: false })}
             />
         </div>
     );
