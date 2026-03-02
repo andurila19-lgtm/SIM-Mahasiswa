@@ -1,50 +1,78 @@
-# SIM Mahasiswa - Student Management Information System
+# SIM Akademik - Modern Student Information System
 
-A modern, scalable, and secure Academic Information System built with React, Express, Supabase, and Firebase.
+Sistem Informasi Manajemen (SIM) Akademik modern berstandar SaaS yang dirancang untuk efisiensi pengelolaan data mahasiswa, rencana studi, dan pemantauan akademik secara real-time.
 
-## 🚀 Getting Started
+## ✨ Fitur Utama (Terbaru)
 
-### 1. Prerequisites
-- Node.js (v18+)
-- Supabase Account (PostgreSQL)
-- Firebase Account (Auth & Storage)
+### 👥 Manajemen Mahasiswa Tingkat Lanjut
+*   **Data Komprehensif**: Mendukung struktur akademik lengkap (Fakultas, Prodi (D3/S1/S2/S3), Semester, Status).
+*   **Smart Filter & Search**: Pencarian instan berdasarkan Nama/NIM dengan filter status dan tombol hapus pencarian otomatis.
+*   **Data Persistence**: Menggunakan sistem hybrid (Supabase + LocalStorage) sehingga data tetap aman meski halaman di-refresh.
+*   **Input Dinamis**: Formulir pendaftaran cerdas dengan dropdown Prodi yang berubah otomatis sesuai Fakultas yang dipilih.
 
-### 2. Environment Setup
-Copy `.env.example` in both `server/` and `client/` folders to `.env` and fill in your credentials.
+### 📄 Ekspor Data Multi-Format
+*   **Excel Export**: Unduh daftar mahasiswa lengkap dalam format `.xlsx` untuk keperluan laporan administratif.
+*   **Premium PDF Print**: Layout cetak yang dioptimalkan (menyembunyikan sidebar/header) untuk hasil dokumen fisik yang profesional.
 
-**Server (.env):**
-- `PORT` (default 5000)
-- `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY`
-- `FIREBASE_PROJECT_ID`, `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`
+### 📚 Integrasi KRS (Kartu Rencana Studi)
+*   **Manajemen Personal**: Admin/Dosen dapat mengelola KRS langsung dari profil spesifik mahasiswa.
+*   **Filter Relevansi**: Daftar mata kuliah di halaman KRS otomatis terfilter berdasarkan Prodi dan Semester mahasiswa yang bersangkutan.
+*   **Detail Penjadwalan**: Informasi lengkap mencakup Nama Dosen, Ruang Kelas, Kode Matkul, SKS, dan Jam Kuliah.
 
-**Client (.env):**
-- `VITE_API_URL` (http://localhost:5000/api)
-- `VITE_SUPABASE_URL` & `VITE_SUPABASE_ANON_KEY`
-- `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN` etc.
+### 🎨 UI/UX Premium
+*   **Rich Aesthetics**: Desain modern menggunakan Tailwind CSS dengan efek glassmorphism, animasi Framer Motion, dan dukungan Dark Mode.
+*   **Responsive**: Pengalaman mulus di perangkat desktop maupun tablet.
 
-### 3. Database Schema
-Run the SQL script provided in `artifacts/schema.sql.md` (or similar) in your Supabase SQL Editor.
+---
 
-### 4. Installation
-```bash
-npm run install:all
+## 🛠️ Arsitektur Teknologi
+- **Frontend**: React.js 18, Vite, TypeScript
+- **Styling**: Tailwind CSS, Lucide React (Icons), Framer Motion (Animations)
+- **Backend & Database**: Supabase (Postgres), Firebase (Auth & Storage)
+- **Utilities**: XLSX (Excel processing), File-Saver, React Router 6
+
+---
+
+## 🚀 Cara Menjalankan Project
+
+### 1. Prasyarat
+- Node.js (v18 ke atas)
+- Akun Supabase & Firebase
+
+### 2. Setup Environment
+Buat file `.env` di folder `client/` (cek `.env.example` untuk referensi):
+```env
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_FIREBASE_API_KEY=...
+... (dan variabel firebase lainnya)
 ```
 
-### 5. Running the Project
+### 3. Instalasi & Eksekusi
 ```bash
+# Instal dependencies
+npm install
+
+# Jalankan mode pengembangan
 npm run start
 ```
-This will launch both the Express backend (Port 5000) and the Vite frontend (Port 5173).
 
-## 🛡️ Role Management
-The system supports 3 roles:
-1. `super_admin`: Full system control.
-2. `lecturer`: Grade management & student monitoring.
-3. `student`: Academic records & KRS enrollment.
+---
 
-## ✨ Key Features
-- **Authentication**: Role-based access with Firebase.
-- **Academic Ops**: Course registration (KRS), Grade Results (KHS), Attendance.
-- **Payments**: Tuition tracking & proof upload.
-- **Dynamic Dashboard**: Personalized stats and schedules per role.
-- **Export**: PDF Export for transcripts (Ready to implement).
+## 🛡️ Manajemen Peran (Roles)
+1. **Super Admin**: Kontrol penuh sistem dan manajemen data induk.
+2. **Dosen (Lecturer)**: Pemantauan akademik, pengelolaan KRS mahasiswa, dan input nilai.
+3. **Mahasiswa (Student)**: Pendaftaran KRS, melihat jadwal, dan riwayat pembayaran.
+
+---
+
+## 📈 Roadmap Pengembangan
+- [x] Manajemen Mahasiswa & Struktur Fakultas Lengkap.
+- [x] Ekspor PDF & Excel.
+- [x] Integrasi KRS per Mahasiswa.
+- [ ] Sistem Absensi Real-time.
+- [ ] Modul Pembayaran Virtual Account.
+- [ ] Grafik Statistik Akademik (Charts).
+
+---
+© 2026 - Dikembangkan untuk SIM Akademik Modern.
