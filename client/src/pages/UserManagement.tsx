@@ -154,19 +154,27 @@ const UserManagement: React.FC = () => {
                 if (error) throw error;
                 showToast('Profil user berhasil diperbarui');
             } else {
-                // Insert (Mocking user creation in profiles)
-                // In production, this would involve creating a Firebase Auth user first
-                const { password, ...insertData } = formData;
-                const { error } = await supabase
-                    .from('profiles')
-                    .insert([{
-                        ...insertData,
-                        id: crypto.randomUUID(), // Temporarily random UUID for mock
-                        created_at: new Date().toISOString()
-                    }]);
+                // Real User Creation via Backend API
+                const token = await currentUserAuth?.getIdToken();
+                const response = await fetch('http://localhost:5000/api/admin/create-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        email: formData.email,
+                        password: formData.password,
+                        fullName: formData.full_name,
+                        role: formData.role,
+                        nimNip: formData.nim_nip
+                    })
+                });
 
-                if (error) throw error;
-                showToast('User baru berhasil ditambahkan ke database manual');
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Gagal membuat user');
+
+                showToast(`User ${formData.role} berhasil didaftarkan`);
             }
             setIsModalOpen(false);
             fetchUsers();

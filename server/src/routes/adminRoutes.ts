@@ -6,7 +6,7 @@ const router: Router = express.Router();
 
 // Protected Routes
 router.use(verifyToken);
-router.use(restrictTo('super_admin', 'lecturer'));
+router.use(restrictTo('superadmin', 'dosen'));
 
 // Get Students (Admin/Lecturer access)
 router.get('/students', async (req: Request, res: Response) => {
@@ -27,7 +27,7 @@ router.get('/students', async (req: Request, res: Response) => {
 });
 
 // Update Student Status (Admin only)
-router.patch('/students/:id/status', restrictTo('super_admin'), async (req: Request, res: Response) => {
+router.patch('/students/:id/status', restrictTo('superadmin'), async (req: Request, res: Response) => {
     const { status } = req.body;
     const { data, error } = await supabase
         .from('profiles')
@@ -40,7 +40,7 @@ router.patch('/students/:id/status', restrictTo('super_admin'), async (req: Requ
 });
 
 // Course Management (Admin only)
-router.post('/courses', restrictTo('super_admin'), async (req: Request, res: Response) => {
+router.post('/courses', restrictTo('superadmin'), async (req: Request, res: Response) => {
     const { name, code, sks, study_program_id, semester_recommended } = req.body;
     const { data, error } = await supabase
         .from('courses')
@@ -52,7 +52,7 @@ router.post('/courses', restrictTo('super_admin'), async (req: Request, res: Res
 });
 
 // Reset User Password (Admin only)
-router.post('/reset-password', restrictTo('super_admin'), async (req: Request, res: Response) => {
+router.post('/reset-password', restrictTo('superadmin'), async (req: Request, res: Response) => {
     const { uid, newPassword } = req.body;
 
     if (!uid || !newPassword) {
@@ -65,6 +65,53 @@ router.post('/reset-password', restrictTo('super_admin'), async (req: Request, r
         res.json({ message: 'Password updated successfully' });
     } catch (error: any) {
         console.error('Reset Password Error:', error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Create New User (Admin only)
+router.post('/create-user', restrictTo('superadmin'), async (req: Request, res: Response) => {
+    const { email, password, fullName, role, nimNip } = req.body;
+
+    if (!email || !password || !fullName || !role) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const { auth } = await import('../config/firebase.js');
+
+        // 1. Create User in Firebase
+        const userRecord = await auth.createUser({
+            email,
+            password,
+            displayName: fullName,
+        });
+
+        // 2. Create Profile in Supabase
+        const { error: supabaseError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: userRecord.uid,
+                full_name: fullName,
+                email: email,
+                role: role,
+                nim_nip: nimNip,
+                status: 'active',
+                created_at: new Date().toISOString()
+            });
+
+        if (supabaseError) {
+            // Cleanup Firebase user if Supabase fails
+            await auth.deleteUser(userRecord.uid);
+            throw supabaseError;
+        }
+
+        res.json({
+            message: 'User created successfully',
+            uid: userRecord.uid
+        });
+    } catch (error: any) {
+        console.error('Create User Error:', error);
         res.status(400).json({ error: error.message });
     }
 });
