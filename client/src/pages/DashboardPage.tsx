@@ -292,52 +292,54 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 {/* Main Content Column */}
                 <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-                    {/* AI Predictor Card */}
-                    <div className="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 relative z-10">
-                            <div>
-                                <h3 className="text-base lg:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <BrainCircuit size={20} className="text-primary animate-pulse" />
-                                    AI Predictor & Insights
-                                </h3>
-                                <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">Analisis prediktif berdasarkan aktivitas akademik Anda</p>
-                            </div>
-                            <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-2">
-                                <Zap size={14} className="text-primary" />
-                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Model: SIM-Brain v1.0</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Prediksi IPK Semester</p>
-                                <div className="flex items-end gap-3 mb-4">
-                                    <span className="text-4xl font-black text-slate-900 dark:text-white">3.88</span>
-                                    <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg mb-1 flex items-center gap-1">
-                                        <TrendingUp size={12} /> +0.02
-                                    </span>
-                                </div>
-                                <p className="text-xs text-slate-500 leading-relaxed font-medium italic">"Berdasarkan tingkat kehadiran 100% dan histori nilai, Anda diprediksi lulus dengan pujian semester ini."</p>
-                            </div>
-                            <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col justify-between">
+                    {/* AI Predictor Card - Only for Students */}
+                    {profile?.role === 'mahasiswa' && (
+                        <div className="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 relative z-10">
                                 <div>
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
-                                        <Sparkles size={12} /> Rekomendasi AI
-                                    </p>
-                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-relaxed">Ambil sertifikasi Cloud Engineering untuk memperkuat portofolio Anda di Semester ini.</p>
+                                    <h3 className="text-base lg:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <BrainCircuit size={20} className="text-primary animate-pulse" />
+                                        AI Predictor & Insights
+                                    </h3>
+                                    <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">Analisis prediktif berdasarkan aktivitas akademik Anda</p>
                                 </div>
-                                <button className="mt-4 text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
-                                    Lihat Path Karir <ArrowRight size={14} className="group-hover:translate-x-1 transition-all" />
-                                </button>
+                                <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-2">
+                                    <Zap size={14} className="text-primary" />
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Model: SIM-Brain v1.0</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Prediksi IPK Semester</p>
+                                    <div className="flex items-end gap-3 mb-4">
+                                        <span className="text-4xl font-black text-slate-900 dark:text-white">3.88</span>
+                                        <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg mb-1 flex items-center gap-1">
+                                            <TrendingUp size={12} /> +0.02
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 leading-relaxed font-medium italic">"Berdasarkan tingkat kehadiran 100% dan histori nilai, Anda diprediksi lulus dengan pujian semester ini."</p>
+                                </div>
+                                <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col justify-between">
+                                    <div>
+                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
+                                            <Sparkles size={12} /> Rekomendasi AI
+                                        </p>
+                                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-relaxed">Ambil sertifikasi Cloud Engineering untuk memperkuat portofolio Anda di Semester ini.</p>
+                                    </div>
+                                    <button className="mt-4 text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
+                                        Lihat Path Karir <ArrowRight size={14} className="group-hover:translate-x-1 transition-all" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Futuristic Background Element */}
+                            <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0"></div>
+                            <div className="absolute top-0 right-0 p-8 text-primary/5 -z-0">
+                                <Cpu size={120} strokeWidth={1} />
                             </div>
                         </div>
-
-                        {/* Futuristic Background Element */}
-                        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0"></div>
-                        <div className="absolute top-0 right-0 p-8 text-primary/5 -z-0">
-                            <Cpu size={120} strokeWidth={1} />
-                        </div>
-                    </div>
+                    )}
 
                     <div className="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
@@ -452,76 +454,78 @@ const DashboardPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* AI Assistant Floating Button */}
-            <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4">
-                <AnimatePresence>
-                    {isAssistantOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="w-[320px] sm:w-[380px] h-[500px] bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden"
-                        >
-                            <div className="p-6 bg-primary text-white flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                        <Cpu size={20} className="animate-pulse" />
+            {/* AI Assistant Floating Button - Only for Students */}
+            {profile?.role === 'mahasiswa' && (
+                <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4">
+                    <AnimatePresence>
+                        {isAssistantOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="w-[320px] sm:w-[380px] h-[500px] bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden"
+                            >
+                                <div className="p-6 bg-primary text-white flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                            <Cpu size={20} className="animate-pulse" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-sm uppercase tracking-tight">SIM AI Assistant</h4>
+                                            <p className="text-[10px] opacity-70">Tersambung • Brain v1.0</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="font-black text-sm uppercase tracking-tight">SIM AI Assistant</h4>
-                                        <p className="text-[10px] opacity-70">Tersambung • Brain v1.0</p>
-                                    </div>
+                                    <button onClick={() => setIsAssistantOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all">
+                                        <X size={18} />
+                                    </button>
                                 </div>
-                                <button onClick={() => setIsAssistantOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all">
-                                    <X size={18} />
-                                </button>
-                            </div>
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
-                                {chatMessages.map((msg, i) => (
-                                    <div key={i} className={cn(
-                                        "max-w-[85%] p-4 rounded-2xl text-xs font-bold leading-relaxed shadow-sm",
-                                        msg.role === 'ai'
-                                            ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 self-start rounded-tl-none"
-                                            : "bg-primary text-white self-end rounded-tr-none ml-auto"
-                                    )}>
-                                        {msg.text}
-                                    </div>
-                                ))}
-                            </div>
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
+                                    {chatMessages.map((msg, i) => (
+                                        <div key={i} className={cn(
+                                            "max-w-[85%] p-4 rounded-2xl text-xs font-bold leading-relaxed shadow-sm",
+                                            msg.role === 'ai'
+                                                ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 self-start rounded-tl-none"
+                                                : "bg-primary text-white self-end rounded-tr-none ml-auto"
+                                        )}>
+                                            {msg.text}
+                                        </div>
+                                    ))}
+                                </div>
 
-                            <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex gap-2">
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Tanya SIM AI..."
-                                    className="flex-1 bg-white dark:bg-slate-900 border-none outline-none p-3 rounded-xl text-xs font-bold shadow-inner"
-                                />
-                                <button type="submit" className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                                    <ArrowRight size={18} />
-                                </button>
-                            </form>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        placeholder="Tanya SIM AI..."
+                                        className="flex-1 bg-white dark:bg-slate-900 border-none outline-none p-3 rounded-xl text-xs font-bold shadow-inner"
+                                    />
+                                    <button type="submit" className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                                        <ArrowRight size={18} />
+                                    </button>
+                                </form>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                <button
-                    onClick={() => setIsAssistantOpen(!isAssistantOpen)}
-                    className={cn(
-                        "w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-2xl transition-all transform hover:scale-110 active:scale-95 group relative",
-                        isAssistantOpen ? "bg-slate-900 dark:bg-slate-800" : "bg-primary"
-                    )}
-                >
-                    {isAssistantOpen ? <X size={28} /> : <MessageSquare size={28} />}
-                    {!isAssistantOpen && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-bounce"></span>
-                    )}
-                    <div className="absolute -left-32 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
-                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest whitespace-nowrap">Tanya SIM AI</p>
-                    </div>
-                </button>
-            </div>
+                    <button
+                        onClick={() => setIsAssistantOpen(!isAssistantOpen)}
+                        className={cn(
+                            "w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-2xl transition-all transform hover:scale-110 active:scale-95 group relative",
+                            isAssistantOpen ? "bg-slate-900 dark:bg-slate-800" : "bg-primary"
+                        )}
+                    >
+                        {isAssistantOpen ? <X size={28} /> : <MessageSquare size={28} />}
+                        {!isAssistantOpen && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-bounce"></span>
+                        )}
+                        <div className="absolute -left-32 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                            <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest whitespace-nowrap">Tanya SIM AI</p>
+                        </div>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

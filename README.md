@@ -25,10 +25,15 @@ Aplikasi dapat diakses secara langsung melalui:
 - **Jadwal Kuliah Dinamis**: Tampilan jadwal mingguan otomatis berdasarkan pengambilan KRS mahasiswa.
 - **Tagihan & Pembayaran**: Integrasi sistem keuangan untuk pelacakan UKT dan upload bukti pembayaran mahasiswa.
 - **Laporan & Analytics**: Visualisasi data pendaftaran, keuangan, dan statistik akademik dalam Dashboard yang informatif.
+- **🤖 SIM AI Intelligence**: Terintegrasi dengan module pembelajaran mesin (Machine Learning) untuk:
+    - **Smart Insights**: Prediksi IPK dan rekomendasi jalur karir mahasiswa.
+    - **AI Assistant**: Chatbot asisten akademik yang siap menjawab pertanyaan operasional kampus 24/7.
+    - **OCR Verification**: Pemindaian bukti bayar otomatis menggunakan visi komputer (Tesseract.js).
 - **Tampilan Premium**: UI modern dengan Dark Mode support, animasi halus (Framer Motion), dan responsivitas tinggi.
 
 ## 🛠️ Tech Stack
 - **Frontend**: React.js 18, Vite, TypeScript, Tailwind CSS, Framer Motion, Lucide React.
+- **AI/ML**: Tesseract.js (Optical Character Recognition), SIM-Brain v1.0 (Heuristic Intelligence).
 - **Backend/Database**: Supabase (PostgreSQL, Real-time Engine).
 - **Authentication**: Firebase Authentication.
 - **State Management**: React Context API & Hooks.
