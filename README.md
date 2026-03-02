@@ -4,6 +4,15 @@
 
 ![Dashboard Preview](https://img.shields.io/badge/Status-Production-success?style=for-the-badge)
 
+## 🌐 Akses Aplikasi
+Aplikasi dapat diakses secara langsung melalui:
+- **URL**: [https://sim.anduril.web.id](https://sim.anduril.web.id)
+
+### 🔑 Akun Akses (Demo/Admin)
+Gunakan kredensial berikut untuk mencoba fitur lengkap sebagai Administrator:
+- **Email**: `admin@kampus.ac.id`
+- **Password**: `123456`
+
 ## ✨ Fitur Utama
 - **Manajemen Mahasiswa (CRUD)**: Kelola data profil mahasiswa secara *real-time*.
 - **Sinkronisasi Multi-Device**: Sinkronisasi data instan antar perangkat melalui Supabase.
@@ -33,10 +42,6 @@
    ```bash
    npm run dev
    ```
-
-## 🌐 Deployment
-Aplikasi ini sudah di-deploy secara otomatis ke Vercel dan dapat diakses melalui:
-**[sim-mahasiswa.vercel.app](https://sim-mahasiswa.vercel.app/)**
 
 ---
 © 2026 Admin Kampus - SIM CEPAT Development Team.
