@@ -7,9 +7,10 @@ import {
     Download,
     Calendar,
     ArrowUpRight,
+    ArrowDownRight,
     Search,
     Filter,
-    ChartPie,
+    PieChart,
     Layers,
     Activity,
     School
@@ -119,7 +120,7 @@ const AcademicReportPage: React.FC = () => {
                 <div className="lg:col-span-3 bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full">
                     <div className="flex items-center justify-between mb-10">
                         <h3 className="font-bold flex items-center gap-2">
-                            <ChartPie size={18} className="text-primary" />
+                            <PieChart size={18} className="text-primary" />
                             Distribusi per Program Studi
                         </h3>
                     </div>
