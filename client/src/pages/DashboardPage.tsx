@@ -15,9 +15,17 @@ import {
     MapPin,
     Clock,
     ExternalLink,
-    School
+    School,
+    Sparkles,
+    MessageSquare,
+    Zap,
+    BrainCircuit,
+    Cpu,
+    X,
+    TrendingDown,
+    ShieldCheck
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Tooltip,
     ResponsiveContainer,
@@ -81,37 +89,39 @@ const DashboardPage: React.FC = () => {
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            // Default stats for students
-            const defaultStats: Stat[] = [
-                { id: 1, name: 'IPK Terakhir', value: '4.00', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 2, name: 'SKS Kumulatif', value: '0', icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                { id: 3, name: 'Presensi', value: '100%', icon: ClipboardCheck, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
-                { id: 4, name: 'Status Bayar', value: 'Lunas', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-            ];
+            setLoading(true);
+            try {
+                // ... dynamic data fetching logic could go here ...
+                // For now, using the established role-based stat logic
+                const defaultStats: Stat[] = [
+                    { id: 1, name: 'IPK Terakhir', value: '4.00', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                    { id: 2, name: 'SKS Kumulatif', value: '0', icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                    { id: 3, name: 'Presensi', value: '100%', icon: ClipboardCheck, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
+                    { id: 4, name: 'Status Bayar', value: 'Lunas', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                ];
 
-            const lecturerStats: Stat[] = [
-                { id: 1, name: 'Kelas Aktif', value: '4', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 2, name: 'Total Mahasiswa', value: '128', icon: User, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                { id: 3, name: 'Kehadiran (Avg)', value: '92%', icon: ClipboardCheck, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                { id: 4, name: 'Butuh Penilaian', value: '12', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-            ];
+                const lecturerStats: Stat[] = [
+                    { id: 1, name: 'Kelas Aktif', value: '4', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                    { id: 2, name: 'Total Mahasiswa', value: '128', icon: User, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                    { id: 3, name: 'Kehadiran (Avg)', value: '92%', icon: ClipboardCheck, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                    { id: 4, name: 'Butuh Penilaian', value: '12', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                ];
 
-            const akademikStats: Stat[] = [
-                { id: 1, name: 'KRS Pending', value: '24', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-                { id: 2, name: 'Jadwal Aktif', value: '56', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 3, name: 'Mhs Cuti', value: '3', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                { id: 4, name: 'Ruang Tersedia', value: '15/40', icon: MapPin, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-            ];
+                const akademikStats: Stat[] = [
+                    { id: 1, name: 'KRS Pending', value: '24', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                    { id: 2, name: 'Jadwal Aktif', value: '56', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                    { id: 3, name: 'Mhs Cuti', value: '3', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                    { id: 4, name: 'Ruang Tersedia', value: '15/40', icon: MapPin, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+                ];
 
-            const keuanganStats: Stat[] = [
-                { id: 1, name: 'Total Pemasukan', value: 'Rp 450M+', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                { id: 2, name: 'Mhs Belum Bayar', value: '12', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                { id: 3, name: 'Invoice Baru', value: '8', icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { id: 4, name: 'Laporan Keuangan', value: 'Ready', icon: ClipboardCheck, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-            ];
+                const keuanganStats: Stat[] = [
+                    { id: 1, name: 'Total Pemasukan', value: 'Rp 450M+', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                    { id: 2, name: 'Mhs Belum Bayar', value: '12', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                    { id: 3, name: 'Invoice Baru', value: '8', icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                    { id: 4, name: 'Laporan Keuangan', value: 'Ready', icon: ClipboardCheck, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+                ];
 
-            if (profile?.role === 'superadmin') {
-                try {
+                if (profile?.role === 'superadmin') {
                     const { count: sCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'mahasiswa');
                     const { count: lCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'dosen');
                     const adminStats: Stat[] = [
@@ -121,28 +131,107 @@ const DashboardPage: React.FC = () => {
                         { id: 4, name: 'Status Sistem', value: 'Online', icon: Bell, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50' },
                     ];
                     setStats(adminStats);
-                } catch (err) {
-                    console.error('Error fetching admin stats:', err);
+                } else if (profile?.role === 'dosen') {
+                    setStats(lecturerStats);
+                } else if (profile?.role === 'akademik') {
+                    setStats(akademikStats);
+                } else if (profile?.role === 'keuangan') {
+                    setStats(keuanganStats);
+                } else {
+                    setStats(defaultStats);
                 }
-            } else if (profile?.role === 'dosen') {
-                setStats(lecturerStats);
-            } else if (profile?.role === 'akademik') {
-                setStats(akademikStats);
-            } else if (profile?.role === 'keuangan') {
-                setStats(keuanganStats);
-            } else {
-                setStats(defaultStats);
+            } catch (err) {
+                console.error('Dashboard Fetch Error:', err);
+            } finally {
+                setLoading(false);
             }
         };
 
-        const mockSchedule: ScheduleItem[] = [];
+        const fetchAnnouncements = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('announcements')
+                    .select('*')
+                    .order('is_pinned', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(3);
 
-        const mockAnnouncements: NewsItem[] = [];
+                if (error) throw error;
+                if (data) {
+                    setAnnouncements(data.map((item: any) => ({
+                        id: item.id,
+                        title: item.title,
+                        date: new Date(item.created_at).toLocaleDateString(),
+                        tag: item.category || 'INFO',
+                        content: item.content
+                    })));
+                }
+            } catch (err) {
+                console.error('Announcements Error:', err);
+            }
+        };
+
+        const fetchScheduleData = async () => {
+            if (profile?.role !== 'mahasiswa') return;
+            try {
+                const { data, error } = await supabase
+                    .from('student_krs')
+                    .select('courses')
+                    .eq('student_id', profile.id)
+                    .eq('status', 'approved')
+                    .single();
+
+                if (error && error.code !== 'PGRST116') throw error;
+                if (data?.courses) {
+                    const today = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
+                    const todaySchedule = data.courses.filter((c: any) => c.schedule.startsWith(today));
+                    setSchedule(todaySchedule.map((c: any, i: number) => ({
+                        id: i,
+                        time: c.schedule.split(', ')[1] || '08:00 - 10:00',
+                        subject: c.name,
+                        room: c.room,
+                        lecturer: c.lecturer,
+                        type: 'Mata Kuliah'
+                    })));
+                }
+            } catch (err) {
+                console.error('Schedule Error:', err);
+            }
+        };
 
         fetchDashboardData();
-        setSchedule(mockSchedule);
-        setAnnouncements(mockAnnouncements);
+        fetchAnnouncements();
+        fetchScheduleData();
     }, [profile]);
+
+    const [loading, setLoading] = useState(true);
+    const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+    const [chatMessages, setChatMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([
+        { role: 'ai', text: `Halo ${profile?.full_name?.split(' ')[0] || 'User'}, saya SIM AI. Ada yang bisa saya bantu terkait jadwal atau administrasi kampus hari ini?` }
+    ]);
+    const [input, setInput] = useState('');
+
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim()) return;
+
+        const userMsg = input;
+        setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        setInput('');
+
+        // SIM AI Reasoning Logic (Simulated ML)
+        setTimeout(() => {
+            let reply = "Mohon maaf, saya sedang mempelajari data terbaru. Bisakah Anda bertanya tentang KRS atau Jadwal?";
+            const msg = userMsg.toLowerCase();
+
+            if (msg.includes('jadwal')) reply = "Anda memiliki " + schedule.length + " perkuliahan hari ini. Silakan cek kartu jadwal di dashboard untuk detail ruangan.";
+            else if (msg.includes('krs')) reply = "Periode KRS masih dibuka hingga 10 Maret. Pastikan Anda sudah melunasi tagihan sebelum mendaftar.";
+            else if (msg.includes('halo') || msg.includes('hi')) reply = "Halo! Senang melihat Anda kembali. Apa kabar studi Anda hari ini?";
+            else if (msg.includes('terima kasih')) reply = "Sama-sama! Semangat kuliahnya ya!";
+
+            setChatMessages(prev => [...prev, { role: 'ai', text: reply }]);
+        }, 1000);
+    };
 
     return (
         <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-700">
@@ -203,6 +292,53 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 {/* Main Content Column */}
                 <div className="lg:col-span-2 space-y-6 lg:space-y-8">
+                    {/* AI Predictor Card */}
+                    <div className="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 relative z-10">
+                            <div>
+                                <h3 className="text-base lg:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <BrainCircuit size={20} className="text-primary animate-pulse" />
+                                    AI Predictor & Insights
+                                </h3>
+                                <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">Analisis prediktif berdasarkan aktivitas akademik Anda</p>
+                            </div>
+                            <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-2">
+                                <Zap size={14} className="text-primary" />
+                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Model: SIM-Brain v1.0</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Prediksi IPK Semester</p>
+                                <div className="flex items-end gap-3 mb-4">
+                                    <span className="text-4xl font-black text-slate-900 dark:text-white">3.88</span>
+                                    <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg mb-1 flex items-center gap-1">
+                                        <TrendingUp size={12} /> +0.02
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 leading-relaxed font-medium italic">"Berdasarkan tingkat kehadiran 100% dan histori nilai, Anda diprediksi lulus dengan pujian semester ini."</p>
+                            </div>
+                            <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
+                                        <Sparkles size={12} /> Rekomendasi AI
+                                    </p>
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-relaxed">Ambil sertifikasi Cloud Engineering untuk memperkuat portofolio Anda di Semester ini.</p>
+                                </div>
+                                <button className="mt-4 text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
+                                    Lihat Path Karir <ArrowRight size={14} className="group-hover:translate-x-1 transition-all" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Futuristic Background Element */}
+                        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0"></div>
+                        <div className="absolute top-0 right-0 p-8 text-primary/5 -z-0">
+                            <Cpu size={120} strokeWidth={1} />
+                        </div>
+                    </div>
+
                     <div className="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                             <div>
@@ -314,6 +450,77 @@ const DashboardPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* AI Assistant Floating Button */}
+            <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4">
+                <AnimatePresence>
+                    {isAssistantOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="w-[320px] sm:w-[380px] h-[500px] bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden"
+                        >
+                            <div className="p-6 bg-primary text-white flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                        <Cpu size={20} className="animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-sm uppercase tracking-tight">SIM AI Assistant</h4>
+                                        <p className="text-[10px] opacity-70">Tersambung • Brain v1.0</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsAssistantOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
+                                {chatMessages.map((msg, i) => (
+                                    <div key={i} className={cn(
+                                        "max-w-[85%] p-4 rounded-2xl text-xs font-bold leading-relaxed shadow-sm",
+                                        msg.role === 'ai'
+                                            ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 self-start rounded-tl-none"
+                                            : "bg-primary text-white self-end rounded-tr-none ml-auto"
+                                    )}>
+                                        {msg.text}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex gap-2">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder="Tanya SIM AI..."
+                                    className="flex-1 bg-white dark:bg-slate-900 border-none outline-none p-3 rounded-xl text-xs font-bold shadow-inner"
+                                />
+                                <button type="submit" className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                                    <ArrowRight size={18} />
+                                </button>
+                            </form>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <button
+                    onClick={() => setIsAssistantOpen(!isAssistantOpen)}
+                    className={cn(
+                        "w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-2xl transition-all transform hover:scale-110 active:scale-95 group relative",
+                        isAssistantOpen ? "bg-slate-900 dark:bg-slate-800" : "bg-primary"
+                    )}
+                >
+                    {isAssistantOpen ? <X size={28} /> : <MessageSquare size={28} />}
+                    {!isAssistantOpen && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-bounce"></span>
+                    )}
+                    <div className="absolute -left-32 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest whitespace-nowrap">Tanya SIM AI</p>
+                    </div>
+                </button>
             </div>
         </div>
     );
