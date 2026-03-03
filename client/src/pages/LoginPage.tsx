@@ -132,7 +132,7 @@ const LoginPage: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 autoComplete="email"
-                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl py-3.5 pl-12 pr-4 outline-none transition-all dark:text-white text-sm"
+                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl py-3.5 pl-12 pr-4 outline-none transition-all text-slate-900 dark:text-white text-sm"
                                 placeholder="nama@kampus.ac.id"
                                 required
                             />
@@ -153,7 +153,7 @@ const LoginPage: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 autoComplete="current-password"
-                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl py-3.5 pl-12 pr-4 outline-none transition-all dark:text-white text-sm"
+                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl py-3.5 pl-12 pr-4 outline-none transition-all text-slate-900 dark:text-white text-sm"
                                 placeholder="••••••••"
                                 required
                             />
