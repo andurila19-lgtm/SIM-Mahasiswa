@@ -1,39 +1,139 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     User,
-    Settings,
-    MapPin,
     Mail,
-    Phone,
     Shield,
-    BookOpen,
-    Clock,
-    Camera,
+    ShieldCheck,
+    Settings,
     Save,
     ChevronRight,
-    ShieldCheck,
-    Zap,
-    Star,
-    ExternalLink,
+    BookOpen,
     Lock,
     GraduationCap,
-    Layers
+    Zap,
+    ExternalLink,
+    Layers,
+    Star,
+    Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
+import Toast, { ToastType } from '../components/Toast';
+import { Phone } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
     const { profile } = useAuth();
     const [activeTab, setActiveTab] = useState('personal');
+    const [stats, setStats] = useState({ ipk: '0.00', totalSks: 0 });
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: ToastType }>({
+        isOpen: false,
+        message: '',
+        type: 'success'
+    });
+
+    const [formData, setFormData] = useState({
+        full_name: '',
+        phone: '',
+        avatar_url: ''
+    });
+
+    useEffect(() => {
+        if (profile) {
+            setFormData({
+                full_name: profile.full_name || '',
+                phone: profile.phone || '',
+                avatar_url: profile.avatar_url || ''
+            });
+        }
+    }, [profile]);
+
+    const showToast = (message: string, type: ToastType = 'success') => {
+        setToast({ isOpen: true, message, type });
+    };
+
+    const handleSave = async () => {
+        if (!profile?.id) return;
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    full_name: formData.full_name,
+                    phone: formData.phone,
+                    avatar_url: formData.avatar_url
+                })
+                .eq('id', profile.id);
+
+            if (error) throw error;
+            showToast('Profil berhasil diperbarui!');
+        } catch (err: any) {
+            console.error('Save Profile Error:', err);
+            showToast('Gagal memperbarui profil: ' + err.message, 'error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            if (!profile?.id || profile.role !== 'mahasiswa') return;
+            try {
+                // Assuming 'supabase' is imported or globally available
+                // Fetch Approved KRS
+                const { data: krsData } = await supabase
+                    .from('student_krs')
+                    .select('courses')
+                    .eq('student_id', profile.id)
+                    .eq('status', 'approved');
+
+                const krsCourses = krsData?.[0]?.courses || [];
+                const totalSks = krsCourses.reduce((s: number, c: any) => s + (c.sks || 0), 0);
+
+                // Fetch Locked Grades
+                const { data: grades } = await supabase
+                    .from('student_grades')
+                    .select('grade_letter, course_id')
+                    .eq('student_id', profile.id)
+                    .eq('is_locked', true);
+
+                let ipk = '0.00';
+                if (grades && grades.length > 0) {
+                    const letterToPoint: Record<string, number> = {
+                        'A': 4, 'A-': 3.75, 'B+': 3.5, 'B': 3, 'B-': 2.75,
+                        'C+': 2.5, 'C': 2, 'D': 1, 'E': 0
+                    };
+                    let totalGradePoints = 0;
+                    let totalGradedSks = 0;
+                    grades.forEach(g => {
+                        const course = krsCourses.find((c: any) => c.id === g.course_id);
+                        if (course) {
+                            const pts = letterToPoint[g.grade_letter] || 0;
+                            totalGradePoints += pts * (course.sks || 0);
+                            totalGradedSks += (course.sks || 0);
+                        }
+                    });
+                    if (totalGradedSks > 0) ipk = (totalGradePoints / totalGradedSks).toFixed(2);
+                }
+                setStats({ ipk, totalSks });
+            } catch (err) {
+                console.error('Profile Stats Fetch Error:', err);
+            }
+        };
+        fetchStats();
+    }, [profile]);
 
     const studentInfo = [
-        { label: 'NIM', value: profile?.nim_nip || '2105001' },
-        { label: 'Fakultas', value: 'Teknik' },
-        { label: 'Program Studi', value: 'Teknik Informatika' },
-        { label: 'Jenjang', value: 'S1 Reguler' },
-        { label: 'Semester', value: '6' },
-        { label: 'Tahun Masuk', value: '2021' },
+        { label: 'NIM', value: profile?.nim_nip || '-' },
+        { label: 'Fakultas', value: profile?.faculty || '-' },
+        { label: 'Program Studi', value: profile?.study_program || '-' },
+        { label: 'IP Kumulatif', value: stats.ipk },
+        { label: 'SKS Lulus', value: stats.totalSks.toString() },
+        { label: 'Semester', value: profile?.semester || '-' },
+        { label: 'Tahun Masuk', value: profile?.batch_year || '-' },
     ];
 
     return (
@@ -94,12 +194,11 @@ const ProfilePage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
-                            <Settings size={20} />
-                        </button>
-                        <button className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                            <Save size={18} />
-                            Simpan Perubahan
+                        <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm group/settings"
+                        >
+                            <Settings size={20} className="group-hover/settings:rotate-90 transition-transform duration-500" />
                         </button>
                     </div>
                 </div>
@@ -171,17 +270,34 @@ const ProfilePage: React.FC = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nama Lengkap</label>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nama Lengkap (Verifikasi)</label>
                                         <div className="relative group">
-                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                                            <input type="text" value={profile?.full_name || ''} disabled className="w-full bg-slate-50 dark:bg-slate-800 border-none outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium opacity-70" />
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <input
+                                                type="text"
+                                                value={formData.full_name}
+                                                readOnly
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium opacity-70 cursor-not-allowed"
+                                            />
                                         </div>
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Email Kampus</label>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nomor Telepon</label>
+                                        <div className="relative group">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <input
+                                                type="text"
+                                                value={formData.phone || '-'}
+                                                readOnly
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium opacity-70 cursor-not-allowed"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Email Kampus (Fixed)</label>
                                         <div className="relative group">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                                            <input type="email" value={profile?.email || ''} readOnly className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-primary/20 outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium" />
+                                            <input type="email" value={profile?.email || ''} readOnly className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium opacity-60 cursor-not-allowed" title="Email cannot be changed" />
                                         </div>
                                     </div>
                                 </div>
@@ -218,10 +334,128 @@ const ProfilePage: React.FC = () => {
                                 </div>
                             </motion.div>
                         )}
+
+                        {activeTab === 'security' && (
+                            <motion.div
+                                key="security"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-10 space-y-10"
+                            >
+                                <div className="flex items-center gap-4 text-slate-800 dark:text-white">
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shadow-sm">
+                                        <Lock size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-bold">Keamanan & Password</h3>
+                                </div>
+
+                                <div className="space-y-6 max-w-md">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Password Saat Ini</label>
+                                        <div className="relative group">
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <input type="password" placeholder="••••••••" className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-primary/20 outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Password Baru</label>
+                                        <div className="relative group">
+                                            <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <input type="password" placeholder="Minimal 8 karakter" className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-primary/20 outline-none py-3 pl-12 pr-4 rounded-xl text-sm font-medium" />
+                                        </div>
+                                    </div>
+                                    <button className="px-6 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-bold rounded-xl hover:opacity-90 transition-all text-sm">
+                                        Update Password
+                                    </button>
+                                </div>
+
+                                <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
+                                    <p className="text-xs text-rose-600 dark:text-rose-400 font-bold leading-relaxed">
+                                        Perhatian: Mengganti password akan menyebabkan sesi login di perangkat lain terputus. Pastikan Anda mengingat password baru Anda.
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
             </div>
-        </div>
+
+            {/* Settings Modal */}
+            <AnimatePresence>
+                {isSettingsOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsSettingsOpen(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+                        >
+                            <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                                        <Settings size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black">Pengaturan Akun</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">General Preferences</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsSettingsOpen(false)}
+                                    className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 hover:text-slate-600 transition-colors shadow-sm"
+                                >
+                                    <Layers size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-8 space-y-8">
+                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all hover:border-primary/20">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center"><Zap size={20} /></div>
+                                        <div><p className="text-sm font-bold">Notifikasi Email</p><p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Aktifkan update akademik</p></div>
+                                    </div>
+                                    <div className="w-12 h-6 bg-primary rounded-full relative p-1 cursor-pointer">
+                                        <div className="w-4 h-4 bg-white rounded-full absolute right-1 shadow-sm"></div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all hover:border-primary/20">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center"><ShieldCheck size={20} /></div>
+                                        <div><p className="text-sm font-bold">Dua Faktor Auth</p><p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Keamanan tambahan</p></div>
+                                    </div>
+                                    <div className="w-12 h-6 bg-slate-200 dark:bg-slate-700 rounded-full relative p-1 cursor-pointer">
+                                        <div className="w-4 h-4 bg-white rounded-full absolute left-1 shadow-sm"></div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => { setIsSettingsOpen(false); setActiveTab('security'); }}
+                                    className="w-full flex items-center justify-center gap-2 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-bold rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-slate-900/10"
+                                >
+                                    <Lock size={18} />
+                                    Lanjut ke Keamanan Akun
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+            />
+        </div >
     );
 };
 

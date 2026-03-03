@@ -50,21 +50,36 @@ const GradesPage: React.FC = () => {
         if (!profile?.id) return;
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            // 1. Fetch approved KRS to get the list of courses
+            const { data: krsData, error: krsError } = await supabase
                 .from('student_krs')
                 .select('courses, status')
                 .eq('student_id', profile.id)
                 .single();
 
-            if (error && error.code !== 'PGRST116') throw error;
+            if (krsError && krsError.code !== 'PGRST116') throw krsError;
 
-            if (data?.courses && data.status === 'approved') {
-                // Map courses to Grades (add mock grade points for demo)
-                const mockPoints = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C'];
-                const letterToPoint: Record<string, number> = { 'A': 4, 'A-': 3.75, 'B+': 3.5, 'B': 3, 'B-': 2.75, 'C+': 2.5, 'C': 2 };
+            // 2. Fetch real locked grades
+            const { data: gradesData, error: gradesError } = await supabase
+                .from('student_grades')
+                .select('course_id, grade_letter, final_score')
+                .eq('student_id', profile.id)
+                .eq('is_locked', true);
 
-                const coursesWithGrades = data.courses.map((c: any, i: number) => {
-                    const letter = mockPoints[i % mockPoints.length];
+            const gradesMap: Record<string, any> = {};
+            (gradesData || []).forEach(g => {
+                gradesMap[g.course_id] = g;
+            });
+
+            if (krsData?.courses && (krsData.status === 'approved' || krsData.status === 'pending')) {
+                const letterToPoint: Record<string, number> = {
+                    'A': 4, 'A-': 3.75, 'B+': 3.5, 'B': 3, 'B-': 2.75,
+                    'C+': 2.5, 'C': 2, 'D': 1, 'E': 0, 'N/A': 0
+                };
+
+                const coursesWithGrades = krsData.courses.map((c: any, i: number) => {
+                    const gradeRecord = gradesMap[c.id];
+                    const letter = gradeRecord?.grade_letter || 'N/A';
                     return {
                         id: i,
                         code: c.code,
@@ -72,7 +87,7 @@ const GradesPage: React.FC = () => {
                         sks: c.sks,
                         grade_letter: letter,
                         grade_point: letterToPoint[letter] || 0,
-                        lecturer: c.lecturer
+                        lecturer: c.lecturer || 'Dosen Pengampu'
                     };
                 });
                 setGrades(coursesWithGrades);
@@ -134,9 +149,23 @@ const GradesPage: React.FC = () => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/4 -z-0"></div>
             </div>
 
+            {/* Print Header (Only visible when printing) */}
+            <div className="hidden print:block mb-8 border-b-2 border-slate-900 pb-6 text-center">
+                <h1 className="text-2xl font-black uppercase tracking-widest mb-1">Kartu Hasil Studi (KHS)</h1>
+                <h2 className="text-xl font-bold text-slate-700">SIM Akademik Universitas Digital</h2>
+                <div className="mt-6 grid grid-cols-2 text-left text-sm gap-y-2 max-w-2xl mx-auto border p-4 rounded-xl">
+                    <p><span className="font-bold inline-block w-24 tracking-tighter">Nama</span>: {profile?.full_name}</p>
+                    <p><span className="font-bold inline-block w-24 tracking-tighter">Fakultas</span>: {profile?.faculty || '-'}</p>
+                    <p><span className="font-bold inline-block w-24 tracking-tighter">NIM</span>: {profile?.nim_nip}</p>
+                    <p><span className="font-bold inline-block w-24 tracking-tighter">Prodi</span>: {profile?.study_program || '-'}</p>
+                    <p><span className="font-bold inline-block w-24 tracking-tighter">Semester</span>: {profile?.semester || '-'}</p>
+                    <p><span className="font-bold inline-block w-24 tracking-tighter">Tahun</span>: {new Date().getFullYear()}</p>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Stats Column */}
-                <div className="space-y-6">
+                <div className="space-y-6 print:hidden">
                     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 overflow-hidden relative group">
                         <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform">
                             <Star size={20} className="fill-primary" />
@@ -175,9 +204,9 @@ const GradesPage: React.FC = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="lg:col-span-3 space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/10">
+                <div className="lg:col-span-3 space-y-6 print:col-span-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col print:border-none print:shadow-none">
+                        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/10 print:hidden">
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Kartu Hasil Studi (KHS)</h3>
                                 <p className="text-xs text-slate-500 font-medium">Rekapitulasi nilai akademik Semester 5 (Genap).</p>
@@ -205,32 +234,43 @@ const GradesPage: React.FC = () => {
                                     <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Memuat Nilai...</p>
                                 </div>
                             ) : grades.length > 0 ? (
-                                grades.map((grade) => (
-                                    <div key={grade.id} className="p-8 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all group">
-                                        <div className="flex items-center gap-8">
-                                            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 font-bold group-hover:bg-primary/10 group-hover:text-primary transition-all border border-slate-100 dark:border-slate-700 shadow-sm">
-                                                {grade.code.slice(0, 2)}
-                                            </div>
-                                            <div className="space-y-1">
-                                                <h4 className="font-bold text-slate-800 dark:text-white group-hover:text-primary transition-colors text-base">{grade.name}</h4>
-                                                <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
-                                                    <span className="flex items-center gap-1.5"><Star size={12} className="opacity-60" /> {grade.code}</span>
-                                                    <span className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-primary/80">{grade.sks} SKS</span>
+                                <div className="print:block">
+                                    {/* Table Header for Print */}
+                                    <div className="hidden print:grid grid-cols-6 p-4 font-black uppercase tracking-widest text-[10px] bg-slate-100 border-y">
+                                        <div className="col-span-3">Matakuliah</div>
+                                        <div className="text-center">SKS</div>
+                                        <div className="text-center">Nilai</div>
+                                        <div className="text-center">Bobot</div>
+                                    </div>
+                                    {grades.map((grade) => (
+                                        <div key={grade.id} className="p-8 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all group print:p-4 print:grid print:grid-cols-6 print:items-center">
+                                            <div className="flex items-center gap-8 print:col-span-3">
+                                                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 font-bold group-hover:bg-primary/10 group-hover:text-primary transition-all border border-slate-100 dark:border-slate-700 shadow-sm print:hidden">
+                                                    {grade.code.slice(0, 2)}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <h4 className="font-bold text-slate-800 dark:text-white group-hover:text-primary transition-colors text-base">{grade.name}</h4>
+                                                    <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
+                                                        <span className="flex items-center gap-1.5"><Star size={12} className="opacity-60" /> {grade.code}</span>
+                                                        <span className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-primary/80 print:hidden">{grade.sks} SKS</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex items-center gap-10">
-                                            <div className="text-right">
-                                                <p className="text-2xl font-black text-slate-900 dark:text-white group-hover:scale-110 transition-transform origin-right">{grade.grade_letter}</p>
-                                                <p className="text-xs text-slate-400 font-medium italic opacity-60 tracking-tight">{grade.grade_point.toFixed(2)} Bobot</p>
+                                            <div className="flex items-center gap-10 print:contents">
+                                                <div className="hidden print:block text-center text-sm font-bold">{grade.sks}</div>
+                                                <div className="text-right print:text-center">
+                                                    <p className="text-2xl font-black text-slate-900 dark:text-white group-hover:scale-110 transition-transform origin-right print:text-base">{grade.grade_letter}</p>
+                                                    <p className="text-xs text-slate-400 font-medium italic opacity-60 tracking-tight print:hidden">{grade.grade_point.toFixed(2)} Bobot</p>
+                                                </div>
+                                                <div className="hidden print:block text-center text-sm font-bold">{(grade.grade_point * grade.sks).toFixed(2)}</div>
+                                                <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all opacity-0 group-hover:opacity-100 print:hidden">
+                                                    < ChevronRight size={20} />
+                                                </button>
                                             </div>
-                                            <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all opacity-0 group-hover:opacity-100">
-                                                < ChevronRight size={20} />
-                                            </button>
                                         </div>
-                                    </div>
-                                ))
+                                    ))}
+                                </div>
                             ) : (
                                 <div className="p-20 text-center">
                                     <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 mx-auto mb-4">
@@ -242,11 +282,26 @@ const GradesPage: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="p-8 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs bg-slate-50/10">
-                            <p className="text-slate-500 font-medium italic">Menampilkan {grades.length} mata kuliah tervalidasi. <span className="not-italic font-bold text-primary cursor-pointer hover:underline uppercase tracking-tighter">Lihat Seluruh Semester</span></p>
+                        <div className="p-8 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs bg-slate-50/10 print:bg-white print:border-slate-900 print:mt-4">
+                            <p className="text-slate-500 font-medium italic print:hidden">Menampilkan {grades.length} mata kuliah tervalidasi. <span className="not-italic font-bold text-primary cursor-pointer hover:underline uppercase tracking-tighter">Lihat Seluruh Semester</span></p>
+                            <p className="hidden print:block text-slate-500 font-bold uppercase tracking-widest">Total SKS: {totalSKS}</p>
                             <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg scale-90 opacity-80 border border-blue-100 dark:border-transparent"><Zap size={14} /> IP Semester: {gpa}</span>
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg scale-90 border border-blue-100 dark:border-transparent print:bg-transparent print:text-slate-900 print:font-black print:text-lg print:scale-100 print:border-none"><Zap size={14} className="print:hidden" /> IP Semester: {gpa}</span>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Print Signature Footer */}
+                    <div className="hidden print:grid grid-cols-2 mt-20 gap-20 px-8">
+                        <div className="text-center">
+                            <p className="text-xs mb-20 uppercase tracking-widest font-black">Mengetahui,<br />Dosen Pembimbing Akademik</p>
+                            <div className="w-48 border-b-2 border-slate-900 mx-auto mb-1"></div>
+                            <p className="text-xs font-bold font-mono">NIDN. .........................</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-xs mb-20 uppercase tracking-widest font-black">Kepala Bagian Akademik</p>
+                            <div className="w-48 border-b-2 border-slate-900 mx-auto mb-1"></div>
+                            <p className="text-xs font-bold font-mono">NIP. .........................</p>
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,8 @@ import {
     Unlock,
     AlertCircle,
     RotateCcw,
-    Send
+    Send,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -33,7 +34,7 @@ interface StudentGrade {
 const InputGradesPage: React.FC = () => {
     const { profile } = useAuth();
     const [selectedClass, setSelectedClass] = useState('');
-    const [classes, setClasses] = useState<{ id: string, label: string }[]>([]);
+    const [classes, setClasses] = useState<{ id: string, label: string, course_id: string }[]>([]);
     const [students, setStudents] = useState<StudentGrade[]>([]);
     const [loading, setLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -44,55 +45,111 @@ const InputGradesPage: React.FC = () => {
 
     useEffect(() => {
         const fetchClasses = async () => {
-            const { data } = await supabase
-                .from('classes')
-                .select('id, name, courses(name, code)')
-                .eq('lecturer_id', profile?.id);
+            if (!profile?.id) return;
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('classes')
+                    .select('id, name, courses(id, name, code)')
+                    .eq('lecturer_id', profile?.id);
 
-            if (data) {
-                const mapped = data.map(m => {
-                    const course = Array.isArray(m.courses) ? m.courses[0] : m.courses;
-                    return {
-                        id: m.id,
-                        label: `${course?.code || 'N/A'} - ${m.name} (${course?.name || 'Unknown'})`
-                    };
-                });
-                setClasses(mapped);
-                if (mapped.length > 0) setSelectedClass(mapped[0].id);
-            } else {
-                // Mock for demo
-                const mock = [
-                    { id: '1', label: 'TIF201 - TI-A (Pemrograman Web II)' },
-                    { id: '2', label: 'TIF201 - TI-B (Pemrograman Web II)' },
-                    { id: '3', label: 'SIF302 - SI-A (Manajemen Data)' }
-                ];
-                setClasses(mock);
-                setSelectedClass(mock[0].id);
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    const mapped = data.map(m => {
+                        const course = Array.isArray(m.courses) ? m.courses[0] : m.courses;
+                        return {
+                            id: m.id,
+                            course_id: course?.id,
+                            label: `${course?.code || 'N/A'} - ${m.name} (${course?.name || 'Unknown'})`
+                        };
+                    });
+                    setClasses(mapped as any);
+                    setSelectedClass(mapped[0].id);
+                } else {
+                    // Mock fallback if no real classes found or table empty
+                    const mock = [
+                        { id: '1', label: 'TIF201 - TI-A (Pemrograman Web II)', course_id: 'c1' },
+                        { id: '2', label: 'TIF201 - TI-B (Pemrograman Web II)', course_id: 'c1' }
+                    ];
+                    setClasses(mock as any);
+                    setSelectedClass(mock[0].id);
+                }
+            } catch (err) {
+                console.error('Fetch Classes Error:', err);
+            } finally {
+                setLoading(false);
             }
         };
-        if (profile?.id) fetchClasses();
+        fetchClasses();
     }, [profile]);
 
     useEffect(() => {
         const fetchStudents = async () => {
-            if (!selectedClass) return;
+            if (!selectedClass || classes.length === 0) return;
             setLoading(true);
             try {
-                // In real app: fetch from student_grades joined with profiles
-                // For now: Mock students
-                const mock: StudentGrade[] = [
-                    { id: 's1', nim: '2024010001', name: 'Budi Santoso', tugas: 85, uts: 80, uas: 90, is_locked: false },
-                    { id: 's2', nim: '2024010002', name: 'Siti Aminah', tugas: 75, uts: 70, uas: 85, is_locked: false },
-                    { id: 's3', nim: '2024010003', name: 'Andi Pratama', tugas: 90, uts: 95, uas: 88, is_locked: true },
-                    { id: 's4', nim: '2024010004', name: 'Dewi Lestari', tugas: 65, uts: 60, uas: 55, is_locked: false },
-                ];
-                setStudents(mock);
+                const currentClass = classes.find(c => c.id === selectedClass);
+                if (!currentClass) return;
+
+                const courseId = currentClass.course_id;
+
+                // 1. Fetch students who took this course in their KRS
+                const { data: krsData, error: krsError } = await supabase
+                    .from('student_krs')
+                    .select('student_id, courses, profiles(full_name, nim_nip)')
+                    .eq('status', 'approved');
+
+                if (krsError) throw krsError;
+
+                const classStudents = (krsData || []).filter(k =>
+                    Array.isArray(k.courses) && k.courses.some((c: any) => c.id === courseId)
+                );
+
+                // 2. Fetch existing grades
+                const { data: gradesData, error: gradesError } = await supabase
+                    .from('student_grades')
+                    .select('*')
+                    .eq('course_id', courseId);
+
+                const studentGradesMap: Record<string, any> = {};
+                (gradesData || []).forEach(g => {
+                    studentGradesMap[g.student_id] = g;
+                });
+
+                const mapped: StudentGrade[] = classStudents.map(k => {
+                    const profileData: any = Array.isArray(k.profiles) ? k.profiles[0] : k.profiles;
+                    return {
+                        id: k.student_id,
+                        nim: profileData?.nim_nip || 'N/A',
+                        name: profileData?.full_name || 'Unknown',
+                        tugas: studentGradesMap[k.student_id]?.tugas ?? '',
+                        uts: studentGradesMap[k.student_id]?.uts ?? '',
+                        uas: studentGradesMap[k.student_id]?.uas ?? '',
+                        is_locked: studentGradesMap[k.student_id]?.is_locked || false,
+                        final: studentGradesMap[k.student_id]?.final_score,
+                        grade: studentGradesMap[k.student_id]?.grade_letter
+                    };
+                });
+
+                if (mapped.length > 0) {
+                    setStudents(mapped);
+                } else {
+                    // Mock fallback if no students found
+                    const mock: StudentGrade[] = [
+                        { id: 's1', nim: '2024010001', name: 'Budi Santoso (Demo)', tugas: 85, uts: 80, uas: 90, is_locked: false },
+                        { id: 's2', nim: '2024010002', name: 'Siti Aminah (Demo)', tugas: 75, uts: 70, uas: 85, is_locked: false }
+                    ];
+                    setStudents(mock);
+                }
+            } catch (err) {
+                console.error('Fetch Students Error:', err);
             } finally {
                 setLoading(false);
             }
         };
         fetchStudents();
-    }, [selectedClass]);
+    }, [selectedClass, classes]);
 
     const calculateGrade = (tugas: any, uts: any, uas: any) => {
         const t = Number(tugas) || 0;
@@ -101,8 +158,10 @@ const InputGradesPage: React.FC = () => {
         const final = t * 0.3 + u1 * 0.3 + u2 * 0.4;
         let grade = 'E';
         if (final >= 85) grade = 'A';
+        else if (final >= 80) grade = 'A-';
         else if (final >= 75) grade = 'B+';
         else if (final >= 70) grade = 'B';
+        else if (final >= 65) grade = 'B-';
         else if (final >= 60) grade = 'C+';
         else if (final >= 55) grade = 'C';
         else if (final >= 40) grade = 'D';
@@ -111,7 +170,8 @@ const InputGradesPage: React.FC = () => {
 
     const gradeColor = (g: string) => {
         if (g === 'A') return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20';
-        if (g === 'B+' || g === 'B') return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
+        if (g === 'A-') return 'text-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10';
+        if (g === 'B+' || g === 'B' || g === 'B-') return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
         if (g === 'C+' || g === 'C') return 'text-amber-600 bg-amber-50 dark:bg-amber-900/20';
         return 'text-rose-600 bg-rose-50 dark:bg-rose-900/20';
     };
@@ -129,20 +189,75 @@ const InputGradesPage: React.FC = () => {
 
     const handleSave = async () => {
         setIsSaving(true);
-        // Simulate API call
-        await new Promise(r => setTimeout(r, 1000));
-        setIsSaving(false);
-        showToast('Draf nilai berhasil disimpan.');
+        try {
+            const currentClass = classes.find(c => c.id === selectedClass);
+            if (!currentClass) return;
+            const courseId = currentClass.course_id;
+
+            const upsertData = students.map(s => {
+                const calc = calculateGrade(s.tugas, s.uts, s.uas);
+                return {
+                    student_id: s.id,
+                    course_id: courseId,
+                    tugas: s.tugas === '' ? null : s.tugas,
+                    uts: s.uts === '' ? null : s.uts,
+                    uas: s.uas === '' ? null : s.uas,
+                    final_score: calc.final,
+                    grade_letter: calc.grade,
+                    is_locked: s.is_locked,
+                    updated_at: new Date().toISOString()
+                };
+            });
+
+            const { error } = await supabase
+                .from('student_grades')
+                .upsert(upsertData, { onConflict: 'student_id, course_id' });
+
+            if (error) throw error;
+            showToast('Draf nilai berhasil disimpan.');
+        } catch (err: any) {
+            showToast('Gagal menyimpan: ' + err.message, 'error');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleFinalize = async () => {
+        if (!confirm('Apakah Anda yakin ingin memfinalisasi semua nilai? Nilai yang dikunci tidak dapat diubah.')) return;
         setIsFinalizing(true);
-        // Simulate locking all
-        setTimeout(() => {
+        try {
+            const currentClass = classes.find(c => c.id === selectedClass);
+            if (!currentClass) return;
+            const courseId = currentClass.course_id;
+
+            const upsertData = students.map(s => {
+                const calc = calculateGrade(s.tugas, s.uts, s.uas);
+                return {
+                    student_id: s.id,
+                    course_id: courseId,
+                    tugas: s.tugas === '' ? null : s.tugas,
+                    uts: s.uts === '' ? null : s.uts,
+                    uas: s.uas === '' ? null : s.uas,
+                    final_score: calc.final,
+                    grade_letter: calc.grade,
+                    is_locked: true,
+                    updated_at: new Date().toISOString()
+                };
+            });
+
+            const { error } = await supabase
+                .from('student_grades')
+                .upsert(upsertData, { onConflict: 'student_id, course_id' });
+
+            if (error) throw error;
+
             setStudents(prev => prev.map(s => ({ ...s, is_locked: true })));
-            setIsFinalizing(false);
             showToast('Semua nilai berhasil dikunci (Finalize)!', 'success');
-        }, 1500);
+        } catch (err: any) {
+            showToast('Gagal finalisasi: ' + err.message, 'error');
+        } finally {
+            setIsFinalizing(false);
+        }
     };
 
     return (
@@ -225,7 +340,7 @@ const InputGradesPage: React.FC = () => {
                                 <tr><td colSpan={8} className="p-20 text-center text-slate-400 font-bold">Memuat data mahasiswa...</td></tr>
                             ) : students.length === 0 ? (
                                 <tr><td colSpan={8} className="p-20 text-center text-slate-400 font-bold">Belum ada mahasiswa terdaftar di kelas ini.</td></tr>
-                            ) : students.map((s, i) => {
+                            ) : students.map((s) => {
                                 const calc = calculateGrade(s.tugas, s.uts, s.uas);
 
                                 return (
@@ -327,9 +442,6 @@ const InputGradesPage: React.FC = () => {
                         <span>Total Mahasiswa: {students.length}</span>
                         <span className="text-primary">Sudah Diinput: {students.filter(s => s.tugas !== '' && s.uts !== '' && s.uas !== '').length}</span>
                         <span className="text-emerald-500">Telah Dikunci: {students.filter(s => s.is_locked).length}</span>
-                    </div>
-                    <div className="flex gap-4">
-                        <button className="flex items-center gap-1.5 hover:text-primary transition-colors"><RotateCcw size={12} /> Reset Filter</button>
                     </div>
                 </div>
             </div>

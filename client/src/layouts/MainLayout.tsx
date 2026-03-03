@@ -16,7 +16,10 @@ import {
     Calendar,
     Clock,
     TrendingUp,
-    Shield
+    Shield,
+    Building2,
+    Moon,
+    Sun
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
@@ -26,7 +29,18 @@ const MainLayout: React.FC = () => {
     const { profile, signOut } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default closed for mobile
     const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
     const navigate = useNavigate();
+
+    const toggleDarkMode = () => {
+        const newMode = !isDarkMode;
+        setIsDarkMode(newMode);
+        if (newMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    };
 
     const handleSignOut = async () => {
         await signOut();
@@ -68,8 +82,11 @@ const MainLayout: React.FC = () => {
         // AKADEMIK SPECIFIC
         { name: 'Laporan Akademik', icon: TrendingUp, path: '/academic-report', roles: ['akademik'] },
 
+        // PLATFORM ADMIN (SaaS)
+        { name: 'Platform Admin', icon: Building2, path: '/platform-admin', roles: ['platform_admin'] },
+
         // GLOBAL
-        { name: 'Pengumuman', icon: Bell, path: '/announcements', roles: ['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan'] },
+        { name: 'Pengumuman', icon: Bell, path: '/announcements', roles: ['superadmin', 'platform_admin', 'mahasiswa', 'dosen', 'akademik', 'keuangan'] },
     ];
 
     const filteredNavItems = navItems.filter(item =>
@@ -170,38 +187,48 @@ const MainLayout: React.FC = () => {
                     ))}
                 </nav>
 
-                {/* User Info & Toggle */}
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700">
-                            {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold bg-slate-100 dark:bg-slate-800">
-                                    {profile?.full_name?.charAt(0) || 'U'}
-                                </div>
-                            )}
+                    <div className="flex items-center justify-between overflow-hidden">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700">
+                                {profile?.avatar_url ? (
+                                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold bg-slate-100 dark:bg-slate-800">
+                                        {profile?.full_name?.charAt(0) || 'U'}
+                                    </div>
+                                )}
+                            </div>
+                            <AnimatePresence>
+                                {(isDesktopSidebarOpen || isSidebarOpen) && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{profile?.full_name || 'Memuat...'}</p>
+                                        <p className="text-xs text-slate-500 truncate capitalize">{
+                                            profile?.role === 'superadmin' ? 'Super Admin' :
+                                                profile?.role === 'mahasiswa' ? 'Mahasiswa' :
+                                                    profile?.role === 'dosen' ? 'Dosen' :
+                                                        profile?.role === 'akademik' ? 'Staff Akademik' :
+                                                            profile?.role === 'keuangan' ? 'Staff Keuangan' :
+                                                                profile?.role || 'User'
+                                        }</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-                        <AnimatePresence>
-                            {(isDesktopSidebarOpen || isSidebarOpen) && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{profile?.full_name || 'Memuat...'}</p>
-                                    <p className="text-xs text-slate-500 truncate capitalize">{
-                                        profile?.role === 'superadmin' ? 'Super Admin' :
-                                            profile?.role === 'mahasiswa' ? 'Mahasiswa' :
-                                                profile?.role === 'dosen' ? 'Dosen' :
-                                                    profile?.role === 'akademik' ? 'Staff Akademik' :
-                                                        profile?.role === 'keuangan' ? 'Staff Keuangan' :
-                                                            profile?.role || 'User'
-                                    }</p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+
+                        {(isDesktopSidebarOpen || isSidebarOpen) && (
+                            <button
+                                onClick={toggleDarkMode}
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-all ml-auto"
+                            >
+                                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                            </button>
+                        )}
                     </div>
                 </div>
             </motion.aside>
@@ -234,16 +261,16 @@ const MainLayout: React.FC = () => {
                             <span className="text-sm font-medium">Keluar</span>
                         </button>
                     </div>
-                </header>
+                </header >
 
                 {/* Main Content scrollable */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar">
+                < div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar" >
                     <div className="max-w-[1600px] mx-auto">
                         <Outlet />
                     </div>
-                </div>
-            </main>
-        </div>
+                </div >
+            </main >
+        </div >
     );
 };
 

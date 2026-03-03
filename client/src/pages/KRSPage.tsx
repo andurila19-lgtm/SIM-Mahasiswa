@@ -12,7 +12,8 @@ import {
     ShieldCheck,
     Zap,
     Save,
-    Send
+    Send,
+    AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -58,6 +59,8 @@ const KRSPage: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [activeYearId, setActiveYearId] = useState<string | null>(null);
+    const [hasUnpaidBills, setHasUnpaidBills] = useState(false);
+    const [unpaidBillsAmount, setUnpaidBillsAmount] = useState(0);
 
     // Toast state
     const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: ToastType }>({
@@ -97,6 +100,32 @@ const KRSPage: React.FC = () => {
             const start = new Date(data.start_date);
             const end = new Date(data.end_date);
             setIsPeriodActive(now >= start && now <= end);
+        }
+    };
+
+    const checkPayments = async () => {
+        if (!studentId || isAcademicAdmin) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('student_bills')
+                .select('amount, status, category')
+                .eq('student_id', studentId)
+                .in('status', ['unpaid', 'pending', 'partial']);
+
+            if (error) throw error;
+
+            // Rule: Mahasiswa tidak bisa KRS jika belum lunas (UKT)
+            const unpaidUKT = (data || []).filter(b => b.category === 'UKT');
+            if (unpaidUKT.length > 0) {
+                setHasUnpaidBills(true);
+                setUnpaidBillsAmount(unpaidUKT.reduce((sum, b) => sum + b.amount, 0));
+            } else {
+                setHasUnpaidBills(false);
+                setUnpaidBillsAmount(0);
+            }
+        } catch (err) {
+            console.error('Check Payments Error:', err);
         }
     };
 
@@ -239,7 +268,8 @@ const KRSPage: React.FC = () => {
                 fetchKRS(),
                 fetchAvailableCourses(),
                 checkKRSPeriod(),
-                fetchProdis()
+                fetchProdis(),
+                checkPayments()
             ]);
         };
         loadAll();
@@ -257,6 +287,10 @@ const KRSPage: React.FC = () => {
 
     const handleAjukanKRS = async () => {
         if (!studentId) return;
+        if (hasUnpaidBills && !isAcademicAdmin) {
+            showToast('Anda memiliki tunggakan UKT. Silakan lakukan pelunasan terlebih dahulu untuk mengisi KRS.', 'error');
+            return;
+        }
         if (!isPeriodActive && !isAcademicAdmin) {
             showToast('Masa pengisian KRS telah berakhir atau belum dibuka.', 'warning');
             return;
@@ -274,13 +308,24 @@ const KRSPage: React.FC = () => {
                 .upsert({
                     student_id: studentId,
                     courses: selectedCourses,
+                    total_sks: totalSKS, // Pass this for DB validation
                     status: nextStatus,
                     academic_year_id: activeYearId,
                     semester: targetStudent?.semester || profile?.semester || 1,
                     updated_at: new Date().toISOString()
                 });
 
-            if (error) throw error;
+            if (error) {
+                // Check for specific database trigger messages
+                if (error.message.includes('tunggakan UKT')) {
+                    showToast('Gagal: ' + error.message, 'error');
+                } else if (error.message.includes('Maksimal pengambilan')) {
+                    showToast('Gagal: ' + error.message, 'error');
+                } else {
+                    throw error;
+                }
+                return;
+            }
 
             setKrsStatus(nextStatus);
             setSuccessMessage(isAcademicAdmin ? 'KRS Mahasiswa berhasil diverifikasi!' : 'KRS berhasil diajukan! Menunggu persetujuan dosen pembimbing.');
@@ -501,6 +546,31 @@ const KRSPage: React.FC = () => {
                 </div>
             </div>
 
+            {/* Payment Warning */}
+            {hasUnpaidBills && !isAcademicAdmin && (
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="p-8 bg-rose-50 dark:bg-rose-900/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6"
+                >
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-rose-500 text-white rounded-[2rem] flex items-center justify-center shadow-lg shadow-rose-500/20">
+                            <AlertCircle size={32} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-rose-600 dark:text-rose-400 mb-1 uppercase tracking-tight">Akses KRS Terkunci</h3>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">Anda memiliki tunggakan UKT sebesar <span className="font-black text-slate-900 dark:text-white">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(unpaidBillsAmount)}</span>. Pelunasan diperlukan untuk melanjutkan.</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => navigate('/payments')}
+                        className="px-8 py-4 bg-rose-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-rose-500/20 hover:scale-[1.03] active:scale-95 transition-all"
+                    >
+                        Bayar Sekarang
+                    </button>
+                </motion.div>
+            )}
+
             {/* Courses Table (Wide) */}
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[400px]">
                 <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/10">
@@ -710,7 +780,8 @@ const KRSPage: React.FC = () => {
                         )}
                         <button
                             onClick={handleAjukanKRS}
-                            className="flex items-center gap-4 px-12 py-5 bg-primary text-white font-black text-sm uppercase tracking-widest rounded-[2rem] shadow-2xl shadow-primary/40 hover:scale-[1.03] active:scale-95 transition-all"
+                            disabled={loading || (hasUnpaidBills && !isAcademicAdmin)}
+                            className="flex items-center gap-4 px-12 py-5 bg-primary text-white font-black text-sm uppercase tracking-widest rounded-[2rem] shadow-2xl shadow-primary/40 hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                         >
                             <Send size={20} /> {isAcademicAdmin ? 'Verifikasi & Simpan Final' : 'Ajukan KRS Sekarang'}
                         </button>

@@ -10,7 +10,7 @@ interface PaymentRecord {
     student_id: string;
     description: string;
     amount: number;
-    status: 'paid' | 'pending' | 'unpaid';
+    status: 'paid' | 'pending' | 'unpaid' | 'partial';
     created_at: string;
     due_date?: string;
     payment_method?: string;
@@ -29,7 +29,7 @@ interface PaymentRecord {
 const PaymentVerificationPage: React.FC = () => {
     const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: ToastType }>({ isOpen: false, message: '', type: 'success' });
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'pending' | 'unpaid'>('all');
+    const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'pending' | 'unpaid' | 'partial'>('all');
     const [filterFaculty, setFilterFaculty] = useState('all');
     const [filterProdi, setFilterProdi] = useState('all');
     const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -60,7 +60,7 @@ const PaymentVerificationPage: React.FC = () => {
                         study_program
                     )
                 `)
-                .in('status', ['pending', 'paid', 'unpaid'])
+                .in('status', ['pending', 'paid', 'unpaid', 'partial'])
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -116,6 +116,24 @@ const PaymentVerificationPage: React.FC = () => {
         }
     };
 
+    const handleCicilan = async (id: string) => {
+        setActionLoading(id);
+        try {
+            const { error } = await supabase
+                .from('student_bills')
+                .update({ status: 'partial' })
+                .eq('id', id);
+
+            if (error) throw error;
+            showToast('Status tagihan diubah menjadi CICILAN.');
+            fetchPayments(true);
+        } catch (err: any) {
+            showToast('Gagal mengubah status: ' + err.message, 'error');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     // ─── Derived data ─────────────────────────────────────────
     const uniqueFaculties = [...new Set(payments.map(p => p.profiles?.faculty).filter(Boolean))] as string[];
     const uniqueProdi = [...new Set(
@@ -145,6 +163,7 @@ const PaymentVerificationPage: React.FC = () => {
     const statusStyle = (status: string) => {
         switch (status) {
             case 'paid': return 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-500/20';
+            case 'partial': return 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:border-blue-500/20';
             case 'unpaid': return 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:border-rose-500/20';
             default: return 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:border-amber-500/20';
         }
@@ -153,6 +172,7 @@ const PaymentVerificationPage: React.FC = () => {
     const statusLabel = (status: string) => {
         switch (status) {
             case 'paid': return 'Lunas';
+            case 'partial': return 'Cicilan';
             case 'unpaid': return 'Belum Bayar';
             default: return 'Menunggu';
         }
@@ -217,6 +237,7 @@ const PaymentVerificationPage: React.FC = () => {
                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 outline-none py-3 px-4 rounded-2xl text-sm font-bold cursor-pointer">
                     <option value="all">Semua Status</option>
                     <option value="pending">Menunggu Verifikasi</option>
+                    <option value="partial">Cicilan</option>
                     <option value="unpaid">Belum Bayar</option>
                     <option value="paid">Lunas</option>
                 </select>
@@ -298,6 +319,13 @@ const PaymentVerificationPage: React.FC = () => {
                                                     >
                                                         {actionLoading === p.id ? <RefreshCw size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
                                                         Verifikasi
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCicilan(p.id)}
+                                                        disabled={actionLoading === p.id}
+                                                        className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-500 text-xs font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all active:scale-95 disabled:opacity-50"
+                                                    >
+                                                        Cicilan
                                                     </button>
                                                     <button
                                                         onClick={() => handleReject(p.id)}

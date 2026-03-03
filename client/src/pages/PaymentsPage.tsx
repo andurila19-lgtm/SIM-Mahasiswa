@@ -242,83 +242,115 @@ const PaymentsPage: React.FC = () => {
     // ─── Download Kwitansi/Struk ─────────────────────────────
     const downloadReceipt = (tx: Transaction) => {
         const canvas = document.createElement('canvas');
-        canvas.width = 600;
-        canvas.height = 500;
+        canvas.width = 800;
+        canvas.height = 1000;
         const ctx = canvas.getContext('2d')!;
 
         // Background
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 600, 500);
+        ctx.fillRect(0, 0, 800, 1000);
 
-        // Header bar
-        const grad = ctx.createLinearGradient(0, 0, 600, 0);
-        grad.addColorStop(0, '#3b82f6');
-        grad.addColorStop(1, '#6366f1');
+        // Professional Header
+        const grad = ctx.createLinearGradient(0, 0, 800, 0);
+        grad.addColorStop(0, '#1e293b');
+        grad.addColorStop(1, '#334155');
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 600, 80);
+        ctx.fillRect(0, 0, 800, 160);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px Arial, sans-serif';
+        ctx.font = 'bold 32px Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('UNIVERSITAS CEPAT', 300, 35);
-        ctx.font = '12px Arial, sans-serif';
-        ctx.fillText('Kwitansi Pembayaran / Payment Receipt', 300, 58);
+        ctx.fillText('UNIVERSITAS ANDURIL INDONESIA', 400, 70);
+        ctx.font = '14px Arial, sans-serif';
+        ctx.fillText('Electronic Receipt System • Valid Official Document', 400, 100);
+        ctx.font = 'bold 18px Arial, sans-serif';
+        ctx.fillText('BUKTI PEMBAYARAN SAH', 400, 135);
+
+        // Watermark
+        ctx.save();
+        ctx.translate(400, 500);
+        ctx.rotate(-Math.PI / 4);
+        ctx.font = 'bold 120px Arial, sans-serif';
+        ctx.fillStyle = 'rgba(226, 232, 240, 0.3)';
+        ctx.textAlign = 'center';
+        ctx.fillText('LUNAS', 0, 0);
+        ctx.restore();
+
+        // Transaction ID & Date
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.fillText('NO. TRANSAKSI', 60, 200);
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 16px Arial, sans-serif';
+        ctx.fillText(tx.id.toUpperCase(), 60, 225);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.fillText('TANGGAL BAYAR', 740, 200);
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 16px Arial, sans-serif';
+        ctx.fillText(new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), 740, 225);
 
         // Separator
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(40, 100);
-        ctx.lineTo(560, 100);
-        ctx.stroke();
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(60, 250); ctx.lineTo(740, 250); ctx.stroke();
 
-        // Fields
+        // Student Info
         ctx.textAlign = 'left';
-        const fields = [
-            ['No. Transaksi', tx.id.substring(0, 8).toUpperCase()],
-            ['Deskripsi', tx.description],
-            ['Tanggal', new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })],
-            ['Metode Bayar', tx.payment_method || 'Transfer Bank'],
-            ['Status', 'LUNAS (Verified)'],
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.fillText('PEMBAYAR (MAHASISWA)', 60, 290);
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 20px Arial, sans-serif';
+        ctx.fillText(profile?.full_name || '-', 60, 320);
+        ctx.font = '16px Arial, sans-serif';
+        ctx.fillText(`NIM: ${profile?.nim_nip || '-'}`, 60, 345);
+        ctx.font = '14px Arial, sans-serif';
+        ctx.fillText(`${profile?.faculty || '-'} • ${profile?.study_program || '-'}`, 60, 365);
+
+        // Details Box
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath(); ctx.roundRect(60, 420, 680, 280, 20); ctx.fill();
+        ctx.strokeStyle = '#e2e8f0'; ctx.stroke();
+
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 16px Arial, sans-serif';
+        ctx.fillText('RINCIAN PEMBAYARAN', 90, 460);
+
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(90, 475); ctx.lineTo(710, 475); ctx.stroke();
+
+        const details = [
+            ['Deskripsi Tagihan', tx.description],
+            ['Kategori', 'Uang Kuliah Tunggal (UKT)'],
+            ['Metode Pembayaran', tx.payment_method || 'Virtual Account'],
+            ['Status Final', 'LUNAS / PAID (Diverifikasi Sistem)']
         ];
 
-        let y = 130;
-        fields.forEach(([label, value]) => {
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '11px Arial, sans-serif';
-            ctx.fillText(label.toUpperCase(), 50, y);
-            ctx.fillStyle = '#1e293b';
-            ctx.font = 'bold 15px Arial, sans-serif';
-            ctx.fillText(value, 50, y + 20);
-            y += 50;
+        details.forEach((d, i) => {
+            const dy = 515 + i * 50;
+            ctx.fillStyle = '#64748b'; ctx.font = 'bold 11px Arial, sans-serif';
+            ctx.fillText(d[0].toUpperCase(), 90, dy);
+            ctx.fillStyle = '#334155'; ctx.font = 'bold 14px Arial, sans-serif';
+            ctx.fillText(d[1], 90, dy + 20);
         });
 
-        // Amount box
+        // Amount Section
+        const amountY = 750;
         ctx.fillStyle = '#f0fdf4';
-        ctx.beginPath();
-        ctx.roundRect(40, y + 10, 520, 70, 12);
-        ctx.fill();
-        ctx.strokeStyle = '#bbf7d0';
-        ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(60, amountY, 680, 100, 20); ctx.fill();
+        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.stroke();
 
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px Arial, sans-serif';
-        ctx.fillText('TOTAL PEMBAYARAN', 60, y + 38);
-        ctx.fillStyle = '#059669';
-        ctx.font = 'bold 24px Arial, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(formatCurrency(tx.amount), 540, y + 60);
+        ctx.fillStyle = '#15803d'; ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.fillText('TOTAL PEMBAYARAN DITERIMA', 90, amountY + 40);
+        ctx.fillStyle = '#166534'; ctx.font = 'bold 36px Arial, sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText(formatCurrency(tx.amount), 710, amountY + 70);
 
-        // Footer
+        // Digital Signature Section
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '10px Arial, sans-serif';
-        ctx.fillText('Dokumen ini dibuat secara otomatis oleh SIM CEPAT', 300, y + 110);
-        ctx.fillText(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 300, y + 125);
+        ctx.fillStyle = '#64748b'; ctx.font = 'italic 12px Arial, sans-serif';
+        ctx.fillText('Dokumen ini merupakan bukti pembayaran elektronik yang sah dan tidak memerlukan tanda tangan basah.', 400, 920);
+        ctx.fillText(`ID Digital: SIM-${tx.id.substring(0, 12)}`, 400, 940);
+        ctx.fillText(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 400, 960);
 
         // Download
         const link = document.createElement('a');
-        link.download = `kwitansi_${tx.id.substring(0, 8)}.png`;
+        link.download = `Kwitansi_SIM_${profile?.nim_nip}_${tx.id.substring(0, 6)}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     };

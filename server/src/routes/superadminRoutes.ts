@@ -488,4 +488,133 @@ router.post('/restore', async (req: Request, res: Response) => {
     });
 });
 
+// ===========================
+// CAMPUS MANAGEMENT (SaaS Platform)
+// ===========================
+router.get('/campuses', async (req: Request, res: Response) => {
+    const { data, error } = await supabase
+        .from('campuses')
+        .select('*')
+        .order('name');
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    // Attach student count & subscription info
+    const enriched = await Promise.all((data || []).map(async (campus: any) => {
+        const { count } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('campus_id', campus.id)
+            .eq('role', 'mahasiswa');
+
+        const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('campus_id', campus.id)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        return {
+            ...campus,
+            current_students: count || 0,
+            subscription: sub || null,
+        };
+    }));
+
+    res.json(enriched);
+});
+
+router.post('/campuses', async (req: Request, res: Response) => {
+    const { name, domain, subscription_plan } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nama kampus wajib diisi' });
+
+    const { data, error } = await supabase
+        .from('campuses')
+        .insert([{ name, domain, subscription_plan: subscription_plan || 'basic' }])
+        .select()
+        .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+    await logAudit(req, 'create', 'campuses', data.id, 'campus', { name, domain });
+    res.json(data);
+});
+
+router.put('/campuses/:id', async (req: Request, res: Response) => {
+    const { name, domain, status } = req.body;
+    const { data, error } = await supabase
+        .from('campuses')
+        .update({ name, domain, status, updated_at: new Date().toISOString() })
+        .eq('id', req.params.id)
+        .select()
+        .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+    await logAudit(req, 'update', 'campuses', req.params.id, 'campus', { name, status });
+    res.json(data);
+});
+
+// ===========================
+// SUBSCRIPTION MANAGEMENT
+// ===========================
+router.get('/subscriptions', async (req: Request, res: Response) => {
+    const { campus_id } = req.query;
+    let query = supabase.from('subscriptions').select('*, campuses(name)').order('created_at', { ascending: false });
+    if (campus_id) query = query.eq('campus_id', campus_id as string);
+
+    const { data, error } = await query;
+    if (error) return res.status(400).json({ error: error.message });
+    res.json(data);
+});
+
+router.post('/subscriptions', async (req: Request, res: Response) => {
+    const { campus_id, plan_name, price, max_students, start_date, end_date } = req.body;
+    if (!campus_id || !plan_name || !end_date) {
+        return res.status(400).json({ error: 'campus_id, plan_name, dan end_date wajib diisi' });
+    }
+
+    // Deactivate existing subscriptions for this campus
+    await supabase
+        .from('subscriptions')
+        .update({ status: 'expired' })
+        .eq('campus_id', campus_id)
+        .eq('status', 'active');
+
+    const { data, error } = await supabase
+        .from('subscriptions')
+        .insert([{
+            campus_id,
+            plan_name,
+            price: price || 0,
+            max_students: max_students || (plan_name === 'Enterprise' ? 99999 : plan_name === 'Pro' ? 2000 : 200),
+            start_date: start_date || new Date().toISOString(),
+            end_date,
+            status: 'active'
+        }])
+        .select()
+        .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+    await logAudit(req, 'create', 'subscriptions', data.id, 'subscription', { campus_id, plan_name });
+    res.json(data);
+});
+
+router.put('/subscriptions/:id', async (req: Request, res: Response) => {
+    const { plan_name, price, max_students, end_date, status } = req.body;
+    const { data, error } = await supabase
+        .from('subscriptions')
+        .update({
+            plan_name, price, max_students, end_date, status,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', req.params.id)
+        .select()
+        .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+    await logAudit(req, 'update', 'subscriptions', req.params.id, 'subscription', { plan_name, status });
+    res.json(data);
+});
+
 export default router;

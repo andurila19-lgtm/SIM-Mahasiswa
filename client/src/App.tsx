@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { initGA, trackPageView } from './lib/analytics';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -29,6 +29,8 @@ import PaymentHistoryPage from './pages/PaymentHistoryPage';
 import FinanceReportPage from './pages/FinanceReportPage';
 import AcademicReportPage from './pages/AcademicReportPage';
 import SuperAdminPage from './pages/SuperAdminPage';
+import ErrorBoundary from './components/ErrorBoundary';
+import PlatformAdminDashboard from './pages/PlatformAdminDashboard';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -47,7 +49,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <>{children}</>;
 };
 
-
 // Analytics Tracker Component
 const AnalyticsTracker: React.FC = () => {
     const location = useLocation();
@@ -65,104 +66,105 @@ const AnalyticsTracker: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <AnalyticsTracker />
-            <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/403" element={<ForbiddenPage />} />
+        <ErrorBoundary>
+            <AuthProvider>
+                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <AnalyticsTracker />
+                    <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/403" element={<ForbiddenPage />} />
 
-                <Route path="/" element={
-                    <ProtectedRoute><MainLayout /></ProtectedRoute>
-                }>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="dashboard" element={<DashboardPage />} />
-                    <Route path="profile" element={<ProfilePage />} />
+                        <Route path="/" element={
+                            <ProtectedRoute><MainLayout /></ProtectedRoute>
+                        }>
+                            <Route index element={<Navigate to="/dashboard" replace />} />
+                            <Route path="dashboard" element={<DashboardPage />} />
+                            <Route path="profile" element={<ProfilePage />} />
 
-                    {/* Superadmin & Akademik */}
-                    <Route path="students" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><StudentManagement /></ProtectedRoute>
-                    } />
-                    <Route path="lecturers" element={
-                        <ProtectedRoute allowedRoles={['superadmin']}><LecturerManagement /></ProtectedRoute>
-                    } />
-                    <Route path="academic" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><AcademicSystem /></ProtectedRoute>
-                    } />
-                    <Route path="krs-verification" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><KRSVerificationPage /></ProtectedRoute>
-                    } />
+                            {/* Superadmin & Akademik */}
+                            <Route path="students" element={
+                                <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><StudentManagement /></ProtectedRoute>
+                            } />
+                            <Route path="lecturers" element={
+                                <ProtectedRoute allowedRoles={['superadmin']}><LecturerManagement /></ProtectedRoute>
+                            } />
+                            <Route path="academic" element={
+                                <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><AcademicSystem /></ProtectedRoute>
+                            } />
+                            <Route path="krs-verification" element={
+                                <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><KRSVerificationPage /></ProtectedRoute>
+                            } />
 
-                    {/* Dosen */}
-                    <Route path="my-classes" element={
-                        <ProtectedRoute allowedRoles={['dosen']}><MyClassesPage /></ProtectedRoute>
-                    } />
-                    <Route path="input-grades" element={
-                        <ProtectedRoute allowedRoles={['dosen']}><InputGradesPage /></ProtectedRoute>
-                    } />
+                            {/* Dosen */}
+                            <Route path="my-classes" element={
+                                <ProtectedRoute allowedRoles={['dosen']}><MyClassesPage /></ProtectedRoute>
+                            } />
+                            <Route path="input-grades" element={
+                                <ProtectedRoute allowedRoles={['dosen']}><InputGradesPage /></ProtectedRoute>
+                            } />
 
-                    {/* Mahasiswa */}
-                    <Route path="krs" element={
-                        <ProtectedRoute allowedRoles={['mahasiswa', 'superadmin', 'akademik']}><KRSPage /></ProtectedRoute>
-                    } />
-                    <Route path="curriculum" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><CurriculumPage /></ProtectedRoute>
-                    } />
-                    <Route path="grades" element={
-                        <ProtectedRoute allowedRoles={['mahasiswa', 'dosen', 'superadmin']}><GradesPage /></ProtectedRoute>
-                    } />
-                    <Route path="attendance" element={
-                        <ProtectedRoute allowedRoles={['mahasiswa', 'dosen', 'superadmin']}><AttendancePage /></ProtectedRoute>
-                    } />
+                            {/* Mahasiswa */}
+                            <Route path="krs" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa', 'superadmin', 'akademik']}><KRSPage /></ProtectedRoute>
+                            } />
+                            <Route path="curriculum" element={
+                                <ProtectedRoute allowedRoles={['superadmin', 'akademik']}><CurriculumPage /></ProtectedRoute>
+                            } />
+                            <Route path="grades" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa', 'dosen', 'superadmin']}><GradesPage /></ProtectedRoute>
+                            } />
+                            <Route path="attendance" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa', 'dosen', 'superadmin']}><AttendancePage /></ProtectedRoute>
+                            } />
 
-                    {/* Keuangan */}
-                    <Route path="payments" element={
-                        <ProtectedRoute allowedRoles={['mahasiswa', 'keuangan', 'superadmin']}><PaymentsPage /></ProtectedRoute>
-                    } />
-                    <Route path="payment-verification" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'keuangan']}><PaymentVerificationPage /></ProtectedRoute>
-                    } />
-                    <Route path="users" element={
-                        <ProtectedRoute allowedRoles={['superadmin']}><UserManagement /></ProtectedRoute>
-                    } />
-                    <Route path="super-admin" element={
-                        <ProtectedRoute allowedRoles={['superadmin']}><SuperAdminPage /></ProtectedRoute>
-                    } />
+                            {/* Keuangan */}
+                            <Route path="payments" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa', 'keuangan', 'superadmin']}><PaymentsPage /></ProtectedRoute>
+                            } />
+                            <Route path="payment-verification" element={
+                                <ProtectedRoute allowedRoles={['superadmin', 'keuangan']}><PaymentVerificationPage /></ProtectedRoute>
+                            } />
+                            <Route path="users" element={
+                                <ProtectedRoute allowedRoles={['superadmin']}><UserManagement /></ProtectedRoute>
+                            } />
+                            <Route path="super-admin" element={
+                                <ProtectedRoute allowedRoles={['superadmin']}><SuperAdminPage /></ProtectedRoute>
+                            } />
 
-                    {/* Mahasiswa Extra Routes */}
-                    <Route path="schedule" element={
-                        <ProtectedRoute allowedRoles={['mahasiswa', 'akademik']}><SchedulePage /></ProtectedRoute>
-                    } />
+                            {/* Platform Admin (SaaS) */}
+                            <Route path="platform-admin" element={
+                                <ProtectedRoute allowedRoles={['platform_admin']}><PlatformAdminDashboard /></ProtectedRoute>
+                            } />
 
-                    {/* Dosen Extra Routes */}
-                    <Route path="materials" element={
-                        <ProtectedRoute allowedRoles={['dosen']}><MaterialsPage /></ProtectedRoute>
-                    } />
+                            {/* Extra Routes */}
+                            <Route path="schedule" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa', 'akademik']}><SchedulePage /></ProtectedRoute>
+                            } />
+                            <Route path="materials" element={
+                                <ProtectedRoute allowedRoles={['dosen']}><MaterialsPage /></ProtectedRoute>
+                            } />
+                            <Route path="student-bills" element={
+                                <ProtectedRoute allowedRoles={['keuangan']}><StudentBillsPage /></ProtectedRoute>
+                            } />
+                            <Route path="payment-history" element={
+                                <ProtectedRoute allowedRoles={['keuangan']}><PaymentHistoryPage /></ProtectedRoute>
+                            } />
+                            <Route path="finance-report" element={
+                                <ProtectedRoute allowedRoles={['keuangan']}><FinanceReportPage /></ProtectedRoute>
+                            } />
+                            <Route path="academic-report" element={
+                                <ProtectedRoute allowedRoles={['akademik']}><AcademicReportPage /></ProtectedRoute>
+                            } />
+                            <Route path="announcements" element={
+                                <ProtectedRoute allowedRoles={['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan']}><AnnouncementsPage /></ProtectedRoute>
+                            } />
+                        </Route>
 
-                    {/* Keuangan Specific Routes */}
-                    <Route path="student-bills" element={
-                        <ProtectedRoute allowedRoles={['keuangan']}><StudentBillsPage /></ProtectedRoute>
-                    } />
-                    <Route path="payment-history" element={
-                        <ProtectedRoute allowedRoles={['keuangan']}><PaymentHistoryPage /></ProtectedRoute>
-                    } />
-                    <Route path="finance-report" element={
-                        <ProtectedRoute allowedRoles={['keuangan']}><FinanceReportPage /></ProtectedRoute>
-                    } />
-
-                    {/* Akademik Specific Routes */}
-                    <Route path="academic-report" element={
-                        <ProtectedRoute allowedRoles={['akademik']}><AcademicReportPage /></ProtectedRoute>
-                    } />
-
-                    {/* Universal */}
-                    <Route path="announcements" element={
-                        <ProtectedRoute allowedRoles={['superadmin', 'mahasiswa', 'dosen', 'akademik', 'keuangan']}><AnnouncementsPage /></ProtectedRoute>
-                    } />
-                </Route>
-
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </Router>
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </Router>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 };
 

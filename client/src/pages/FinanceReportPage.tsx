@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     TrendingUp,
     TrendingDown,
@@ -17,7 +17,27 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    LineChart,
+    Line,
+    AreaChart,
+    Area
+} from 'recharts';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+
 const FinanceReportPage: React.FC = () => {
+    const [bills, setBills] = useState<any[]>([]);
     const [stats, setStats] = useState({
         totalPaid: 0,
         totalPending: 0,
@@ -28,13 +48,18 @@ const FinanceReportPage: React.FC = () => {
     });
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [selectedSemester, setSelectedSemester] = useState<string>('all');
 
     const fetchData = async () => {
         setRefreshing(true);
         setLoading(true);
         try {
-            const { data, error } = await supabase.from('student_bills').select('amount, status');
+            const { data, error } = await supabase
+                .from('student_bills')
+                .select('*, profiles:student_id(full_name, nim_nip, faculty, study_program)');
+
             if (error) throw error;
+            setBills(data || []);
 
             const newStats = {
                 totalPaid: 0,
@@ -67,6 +92,21 @@ const FinanceReportPage: React.FC = () => {
         }
     };
 
+    const filteredBills = useMemo(() => {
+        if (selectedSemester === 'all') return bills;
+        return bills.filter(b => b.semester === selectedSemester);
+    }, [bills, selectedSemester]);
+
+    const activeStats = useMemo(() => {
+        const s = { totalPaid: 0, totalPending: 0, totalUnpaid: 0, countPaid: 0, countPending: 0, countUnpaid: 0 };
+        filteredBills.forEach(b => {
+            if (b.status === 'paid') { s.totalPaid += b.amount; s.countPaid++; }
+            else if (b.status === 'pending') { s.totalPending += b.amount; s.countPending++; }
+            else { s.totalUnpaid += b.amount; s.countUnpaid++; }
+        });
+        return s;
+    }, [filteredBills]);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -75,91 +115,65 @@ const FinanceReportPage: React.FC = () => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amt);
     };
 
-    // ─── Export Laporan sebagai PNG ─────────────────────────────
-    const exportReport = () => {
-        const W = 800, H = 600;
-        const canvas = document.createElement('canvas');
-        canvas.width = W; canvas.height = H;
-        const ctx = canvas.getContext('2d')!;
+    // ─── Data for Charts ──────────────────────────────────────────
+    const chartData = useMemo(() => {
+        const monthlyData: Record<string, any> = {};
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-        // BG
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, H);
+        // Initialize 6 months
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+            monthlyData[key] = { name: key, pendapatan: 0, piutang: 0 };
+        }
 
-        // Header
-        const grad = ctx.createLinearGradient(0, 0, W, 0);
-        grad.addColorStop(0, '#3b82f6');
-        grad.addColorStop(1, '#6366f1');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, W, 90);
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 24px Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('LAPORAN KEUANGAN — UNIVERSITAS CEPAT', W / 2, 40);
-        ctx.font = '13px Arial, sans-serif';
-        ctx.fillText(`Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`, W / 2, 65);
-
-        // Cards
-        const cards = [
-            { label: 'Total Pendapatan (Lunas)', value: formatCurrency(stats.totalPaid), count: `${stats.countPaid} Transaksi`, color: '#059669', bg: '#f0fdf4' },
-            { label: 'Pending (Verifikasi)', value: formatCurrency(stats.totalPending), count: `${stats.countPending} Mahasiswa`, color: '#d97706', bg: '#fffbeb' },
-            { label: 'Tunggakan (Belum Bayar)', value: formatCurrency(stats.totalUnpaid), count: `${stats.countUnpaid} Mahasiswa`, color: '#dc2626', bg: '#fef2f2' },
-        ];
-
-        const cardW = 220, cardH = 120, gap = 25, startX = (W - (cardW * 3 + gap * 2)) / 2;
-        cards.forEach((c, i) => {
-            const x = startX + i * (cardW + gap), y = 120;
-            ctx.fillStyle = c.bg;
-            ctx.beginPath(); ctx.roundRect(x, y, cardW, cardH, 14); ctx.fill();
-            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.stroke();
-
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '10px Arial, sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText(c.label.toUpperCase(), x + 18, y + 30);
-            ctx.fillStyle = c.color;
-            ctx.font = 'bold 22px Arial, sans-serif';
-            ctx.fillText(c.value, x + 18, y + 65);
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '11px Arial, sans-serif';
-            ctx.fillText(c.count, x + 18, y + 95);
-        });
-
-        // Summary table
-        const tableY = 280;
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath(); ctx.roundRect(60, tableY, W - 120, 200, 14); ctx.fill();
-        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.stroke();
-
-        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 15px Arial, sans-serif'; ctx.textAlign = 'left';
-        ctx.fillText('Ringkasan Keuangan', 85, tableY + 35);
-
-        const rows = [
-            ['Pendapatan Masuk', formatCurrency(stats.totalPaid), '#059669'],
-            ['Menunggu Verifikasi', formatCurrency(stats.totalPending), '#d97706'],
-            ['Piutang / Tunggakan', formatCurrency(stats.totalUnpaid), '#dc2626'],
-            ['Total Keseluruhan', formatCurrency(stats.totalPaid + stats.totalPending + stats.totalUnpaid), '#1e293b'],
-        ];
-        rows.forEach((r, i) => {
-            const ry = tableY + 65 + i * 32;
-            ctx.fillStyle = '#64748b'; ctx.font = '13px Arial, sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText(r[0], 85, ry);
-            ctx.fillStyle = r[2]; ctx.font = 'bold 14px Arial, sans-serif'; ctx.textAlign = 'right';
-            ctx.fillText(r[1], W - 85, ry);
-            if (i < rows.length - 1) {
-                ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); ctx.moveTo(85, ry + 12); ctx.lineTo(W - 85, ry + 12); ctx.stroke();
+        filteredBills.forEach(b => {
+            const d = new Date(b.created_at);
+            const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+            if (monthlyData[key]) {
+                if (b.status === 'paid') monthlyData[key].pendapatan += b.amount;
+                else monthlyData[key].piutang += b.amount;
             }
         });
 
-        // Footer
-        ctx.textAlign = 'center'; ctx.fillStyle = '#94a3b8'; ctx.font = '10px Arial, sans-serif';
-        ctx.fillText('Dokumen ini dibuat secara otomatis oleh SIM CEPAT', W / 2, H - 40);
-        ctx.fillText(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, W / 2, H - 24);
+        return Object.values(monthlyData);
+    }, [filteredBills]);
 
-        const link = document.createElement('a');
-        link.download = `laporan_keuangan_${new Date().toISOString().slice(0, 10)}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+    const pieData = [
+        { name: 'Lunas', value: activeStats.totalPaid, color: '#10b981' },
+        { name: 'Pending', value: activeStats.totalPending, color: '#f59e0b' },
+        { name: 'Belum Bayar', value: activeStats.totalUnpaid, color: '#ef4444' },
+    ];
+
+    // ─── Export Laporan Excel ─────────────────────────────────────
+    const exportToExcel = () => {
+        const worksheetData = bills.map(b => ({
+            'Nama Mahasiswa': b.profiles?.full_name || '-',
+            'NIM': b.profiles?.nim_nip || '-',
+            'Fakultas': b.profiles?.faculty || '-',
+            'Prodi': b.profiles?.study_program || '-',
+            'Deskripsi': b.description,
+            'Kategori': b.category || 'UKT',
+            'Semester': b.semester || '-',
+            'Nominal': b.amount,
+            'Status': b.status === 'paid' ? 'Lunas' : b.status === 'pending' ? 'Pending' : 'Belum Bayar',
+            'Tanggal': new Date(b.created_at).toLocaleDateString('id-ID')
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(worksheetData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Laporan Keuangan');
+
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+        saveAs(data, `Laporan_Keuangan_SIM_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+
+    // ─── Export Laporan sebagai PNG ─────────────────────────────
+    const exportReport = () => {
+        // Reuse existing PNG export if needed, but Excel is better for finance
+        exportToExcel();
     };
 
     return (
@@ -175,9 +189,19 @@ const FinanceReportPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3 relative z-10">
+                    <select
+                        value={selectedSemester}
+                        onChange={(e) => setSelectedSemester(e.target.value)}
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    >
+                        <option value="all">Semua Semester</option>
+                        {Array.from({ length: 8 }, (_, i) => `Semester ${i + 1}`).map(s => (
+                            <option key={s} value={s}>{s}</option>
+                        ))}
+                    </select>
                     <button onClick={exportReport} className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
                         <Download size={18} />
-                        Export PDF
+                        Export Excel
                     </button>
                     <button onClick={fetchData} disabled={refreshing} className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70">
                         {refreshing && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
@@ -194,17 +218,14 @@ const FinanceReportPage: React.FC = () => {
                         <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500">
                             <DollarSign size={24} />
                         </div>
-                        <span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
-                            <ArrowUpRight size={14} /> 12%
-                        </span>
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pendapatan (Lunas)</p>
-                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">{formatCurrency(stats.totalPaid)}</h3>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">{formatCurrency(activeStats.totalPaid)}</h3>
                     <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500 w-[70%]" />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400">{stats.countPaid} Transaksi</span>
+                        <span className="text-[10px] font-bold text-slate-400">{activeStats.countPaid} Transaksi</span>
                     </div>
                 </motion.div>
 
@@ -213,17 +234,14 @@ const FinanceReportPage: React.FC = () => {
                         <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500">
                             <CreditCard size={24} />
                         </div>
-                        <span className="flex items-center gap-1 text-xs font-black text-amber-500 bg-amber-500/10 px-2 py-1 rounded-lg">
-                            DI PROSES
-                        </span>
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tagihan Pending (Verifikasi)</p>
-                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">{formatCurrency(stats.totalPending)}</h3>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">{formatCurrency(activeStats.totalPending)}</h3>
                     <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-amber-500 w-[30%]" />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400">{stats.countPending} Mahasiswa</span>
+                        <span className="text-[10px] font-bold text-slate-400">{activeStats.countPending} Mahasiswa</span>
                     </div>
                 </motion.div>
 
@@ -233,86 +251,96 @@ const FinanceReportPage: React.FC = () => {
                             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white border border-white/10">
                                 <TrendingDown size={24} />
                             </div>
-                            <span className="flex items-center gap-1 text-xs font-black text-red-400 bg-red-400/10 px-2 py-1 rounded-lg border border-red-400/20">
-                                <ArrowDownRight size={14} /> PIUTANG
-                            </span>
                         </div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tunggakan (Belum Bayar)</p>
-                        <h3 className="text-3xl font-black text-white mb-4">{formatCurrency(stats.totalUnpaid)}</h3>
+                        <h3 className="text-3xl font-black text-white mb-4">{formatCurrency(activeStats.totalUnpaid)}</h3>
                         <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
                                 <div className="h-full bg-red-500 w-[50%]" />
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500">{stats.countUnpaid} Mahasiswa</span>
+                            <span className="text-[10px] font-bold text-slate-500">{activeStats.countUnpaid} Mahasiswa</span>
                         </div>
                     </div>
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -z-0"></div>
                 </motion.div>
             </div>
 
-            {/* Visual Charts Simulation */}
+            {/* Visual Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-lg">
                     <div className="flex items-center justify-between mb-10">
                         <h3 className="font-bold flex items-center gap-2">
                             <BarChart3 size={18} className="text-primary" />
-                            Grafik Pendapatan Bulanan
+                            Tren Pendapatan & Piutang (6 Bulan Terakhir)
                         </h3>
-                        <div className="flex gap-2">
-                            {['6B', '1T'].map(p => <button key={p} className="px-3 py-1 text-[10px] font-black rounded-lg border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-colors">{p}</button>)}
-                        </div>
                     </div>
 
-                    <div className="h-64 flex items-end gap-4 px-2">
-                        {[40, 65, 45, 80, 55, 90, 75].map((val, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
-                                <div className="w-full relative">
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${val}%` }}
-                                        className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl group-hover:bg-primary/20 transition-all border border-transparent group-hover:border-primary/20"
-                                    />
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${val * 0.7}%` }}
-                                        className="absolute bottom-0 left-0 w-full bg-primary rounded-xl"
-                                    />
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Bln {i + 1}</span>
-                            </div>
-                        ))}
+                    <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                                    tickFormatter={(value) => `${value / 1000000}jt`}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '12px' }}
+                                    formatter={(value: number) => formatCurrency(value)}
+                                />
+                                <Bar dataKey="pendapatan" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Pendapatan" />
+                                <Bar dataKey="piutang" fill="#ef4444" radius={[4, 4, 0, 0]} name="Piutang" />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative">
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-lg">
                     <div className="flex items-center justify-between mb-10">
                         <h3 className="font-bold flex items-center gap-2">
                             <PieChartIcon size={18} className="text-primary" />
-                            Distribusi Status Tagihan
+                            Distribusi Realisasi Tagihan
                         </h3>
                     </div>
 
-                    <div className="flex items-center justify-around gap-8 h-64">
-                        <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-50 dark:border-slate-800 flex items-center justify-center">
-                            <div className="text-center">
-                                <p className="text-2xl font-black text-slate-900 dark:text-white">100%</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Akumulasi</p>
-                            </div>
-                            {/* Simple CSS radial progress simulation could go here */}
+                    <div className="flex flex-col sm:flex-row items-center justify-around gap-8 h-72">
+                        <div className="w-full h-full max-w-[240px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                </PieChart>
+                            </ResponsiveContainer>
                         </div>
 
-                        <div className="space-y-4 flex-1 max-w-[160px]">
-                            {[
-                                { label: 'Lunas', color: 'bg-emerald-500', val: stats.countPaid },
-                                { label: 'Pending', color: 'bg-amber-500', val: stats.countPending },
-                                { label: 'Tunggakan', color: 'bg-red-500', val: stats.countUnpaid }
-                            ].map(item => (
-                                <div key={item.label} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                        <div className="space-y-4 flex-1 w-full max-w-[200px]">
+                            {pieData.map(item => (
+                                <div key={item.name} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
                                     <div className="flex items-center gap-2">
-                                        <div className={cn("w-2 h-2 rounded-full", item.color)} />
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{item.name}</span>
                                     </div>
-                                    <span className="text-xs font-black">{item.val}</span>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                                        {Math.round((item.value / (stats.totalPaid + stats.totalPending + stats.totalUnpaid || 1)) * 100)}%
+                                    </span>
                                 </div>
                             ))}
                         </div>

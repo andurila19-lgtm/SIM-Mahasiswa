@@ -10,6 +10,7 @@ export interface Profile {
     semester?: number;
     faculty?: string;
     study_program?: string;
+    batch_year?: string;
     created_at?: string;
 }
 
