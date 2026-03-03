@@ -34,7 +34,7 @@ interface Student {
     nim_nip: string;
     email: string;
     role: string;
-    status: 'active' | 'inactive' | 'pending';
+    status: 'active' | 'inactive' | 'pending' | 'cuti';
     faculty: string;
     study_program: string;
     semester: number;
@@ -45,30 +45,10 @@ interface Student {
 
 const StudentManagement: React.FC = () => {
     const navigate = useNavigate();
-    const [students, setStudents] = useState<Student[]>(() => {
-        const saved = localStorage.getItem('sim_students');
-        // We define normalization locally here since the helper is defined later
-        const normalize = (data: any[]) => data.map(s => {
-            let faculty = s.faculty || '';
-            let prodi = s.study_program || '';
-            if (faculty === 'Teknologi Informasi' || faculty === 'Teknik') {
-                faculty = 'Fakultas Teknik (FT)';
-                if (prodi === 'Informatika') prodi = 'Teknik Informatika (S1)';
-            } else if (faculty === 'Ekonomi & Bisnis') {
-                faculty = 'Fakultas Ekonomi dan Bisnis (FEB)';
-            }
-            const firstName = (s.full_name || '').trim().split(' ')[0].toLowerCase();
-            const email = (s.nim_nip && firstName) ? `${firstName}_${s.nim_nip}@student.ac.id` : s.email;
-            return { ...s, faculty, study_program: prodi, email, class_name: s.class_name || 'A' };
-        });
-
-        if (saved) return normalize(JSON.parse(saved));
-        return [];
-    });
-
+    const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+    const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive' | 'cuti'>('all');
 
     // Modal States
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -421,6 +401,7 @@ const StudentManagement: React.FC = () => {
                         <option value="all">Semua Status</option>
                         <option value="active">Aktif</option>
                         <option value="inactive">Non-Aktif</option>
+                        <option value="cuti">Cuti</option>
                     </select>
                 </div>
             </div>
@@ -446,9 +427,11 @@ const StudentManagement: React.FC = () => {
                                 </div>
                                 <div className={cn(
                                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                    student.status === 'active' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" : "bg-red-50 dark:bg-red-500/10 text-red-600"
+                                    student.status === 'active' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" :
+                                        student.status === 'cuti' ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600" :
+                                            "bg-red-50 dark:bg-red-500/10 text-red-600"
                                 )}>
-                                    {student.status}
+                                    {student.status.toUpperCase()}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3 pt-2">
@@ -532,9 +515,13 @@ const StudentManagement: React.FC = () => {
                                     <td className="px-8 py-6">
                                         <div className={cn(
                                             "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider",
-                                            student.status === 'active' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                            student.status === 'active' ? "bg-emerald-50 text-emerald-600" :
+                                                student.status === 'cuti' ? "bg-amber-50 text-amber-600" :
+                                                    "bg-red-50 text-red-600"
                                         )}>
-                                            {student.status === 'active' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                                            {student.status === 'active' ? <CheckCircle2 size={12} /> :
+                                                student.status === 'cuti' ? <Clock size={12} /> :
+                                                    <XCircle size={12} />}
                                             {student.status}
                                         </div>
                                     </td>
@@ -691,6 +678,7 @@ const StudentManagement: React.FC = () => {
                                     >
                                         <option value="active">Aktif</option>
                                         <option value="inactive">Non-Aktif</option>
+                                        <option value="cuti">Cuti</option>
                                     </select>
                                 </div>
                                 <button

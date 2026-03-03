@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS student_bills (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     description TEXT NOT NULL,
-    amount INTEGER NOT NULL DEFAULT 0,
+    amount BIGINT NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'unpaid',
     category TEXT,
     semester TEXT,

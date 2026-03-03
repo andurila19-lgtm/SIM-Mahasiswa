@@ -7,6 +7,9 @@ export interface Profile {
     phone?: string;
     avatar_url?: string;
     status: 'active' | 'suspended';
+    semester?: number;
+    faculty?: string;
+    study_program?: string;
     created_at?: string;
 }
 

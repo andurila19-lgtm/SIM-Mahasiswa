@@ -13,7 +13,8 @@ import {
     PieChart,
     Layers,
     Activity,
-    School
+    School,
+    Printer
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -27,28 +28,43 @@ const AcademicReportPage: React.FC = () => {
         leave: 0,
         prodiDistrib: {} as Record<string, number>
     });
+    const [students, setStudents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from('profiles').select('role, study_program, status');
-            if (error) throw error;
+            // Fetch all profiles for stats
+            const { data: allData, error: profileError } = await supabase
+                .from('profiles')
+                .select('*');
+            if (profileError) throw profileError;
+
+            // Fetch students specifically for the list
+            const studentProfiles = allData?.filter(p => p.role === 'mahasiswa') || [];
+
+            // Mock IPK logic (since grades are in krs/student_krs)
+            // In real app, we would join with grades table
+            const studentsWithIpk = studentProfiles.map(s => ({
+                ...s,
+                gpa: (Math.random() * (4.0 - 2.5) + 2.5).toFixed(2), // Mock GPA
+                total_sks: Math.floor(Math.random() * (120 - 40) + 40)
+            }));
+
+            setStudents(studentsWithIpk);
 
             const newStats = {
-                total: 0,
+                total: studentsWithIpk.length,
                 active: 0,
                 graduated: 0,
                 leave: 0,
                 prodiDistrib: {} as Record<string, number>
             };
 
-            const students = data?.filter(p => p.role === 'mahasiswa') || [];
-            newStats.total = students.length;
-
-            students.forEach(s => {
-                if (s.status === 'Aktif') newStats.active++;
-                else if (s.status === 'Lulus') newStats.graduated++;
+            studentsWithIpk.forEach(s => {
+                if (s.status === 'active') newStats.active++;
+                else if (s.status === 'graduated') newStats.graduated++;
                 else newStats.leave++;
 
                 if (s.study_program) {
@@ -68,6 +84,16 @@ const AcademicReportPage: React.FC = () => {
         fetchData();
     }, []);
 
+    const handlePrint = (student: any, type: 'khs' | 'transcript') => {
+        alert(`Mencetak ${type.toUpperCase()} untuk ${student.full_name}...`);
+        window.print();
+    };
+
+    const filteredStudents = students.filter(s =>
+        s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.nim_nip?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     const prodiLabels = Object.keys(stats.prodiDistrib).slice(0, 5);
 
     return (
@@ -78,28 +104,24 @@ const AcademicReportPage: React.FC = () => {
                     <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 transition-transform group-hover:scale-110">
                         <GraduationCap size={28} />
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Statistik Akademik</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Analisis data mahasiswa, persebaran prodi, dan status akademik.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Monitoring & Pelaporan</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Analisis IPK mahasiswa dan pencetakan dokumen akademik resmi.</p>
                 </div>
 
-                <div className="flex items-center gap-3 relative z-10">
-                    <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
-                        <Download size={18} />
-                        Download Laporan
-                    </button>
+                <div className="flex items-center gap-3 relative z-10 no-print">
                     <button onClick={fetchData} className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                        Sinkronisasi Data
+                        Refresh Data
                     </button>
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/4 -z-0"></div>
             </div>
 
             {/* Top Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 no-print">
                 {[
                     { label: 'Total Mahasiswa', value: stats.total, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
                     { label: 'Mahasiswa Aktif', value: stats.active, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-                    { label: 'Telah Lulus', value: stats.graduated, icon: School, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                    { label: 'Rerata IPK', value: '3.42', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-500/10' },
                     { label: 'Cuti / Non-Aktif', value: stats.leave, icon: Layers, color: 'text-amber-500', bg: 'bg-amber-500/10' },
                 ].map((item, i) => (
                     <motion.div key={i} whileHover={{ y: -5 }} className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between overflow-hidden relative group">
@@ -114,94 +136,94 @@ const AcademicReportPage: React.FC = () => {
                 ))}
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                {/* Prodi Distribution */}
-                <div className="lg:col-span-3 bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full">
-                    <div className="flex items-center justify-between mb-10">
-                        <h3 className="font-bold flex items-center gap-2">
-                            <PieChart size={18} className="text-primary" />
-                            Distribusi per Program Studi
-                        </h3>
-                    </div>
-
-                    <div className="flex-1 space-y-6">
-                        {prodiLabels.map((prodi, i) => {
-                            const count = stats.prodiDistrib[prodi];
-                            const percentage = (count / stats.total) * 100 || 0;
-                            return (
-                                <div key={prodi} className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-tight">{prodi}</span>
-                                        <span className="text-[10px] font-black text-primary">{count} Mhs ({percentage.toFixed(1)}%)</span>
-                                    </div>
-                                    <div className="h-4 bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-800/50">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${percentage}%` }}
-                                            transition={{ delay: i * 0.1, duration: 1 }}
-                                            className={cn("h-full transition-all rounded-lg",
-                                                i % 3 === 0 ? "bg-primary" : i % 3 === 1 ? "bg-blue-500" : "bg-emerald-500"
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        })}
+            {/* Student List & GPA Monitoring */}
+            <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[500px]">
+                <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/10">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                        <Users size={20} className="text-primary" />
+                        Daftar Mahasiswa & Monitoring IPK
+                    </h3>
+                    <div className="relative no-print">
+                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Cari Mahasiswa..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-slate-100 dark:bg-slate-800 border-none outline-none py-2.5 pl-10 pr-4 rounded-xl text-xs w-64 focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                        />
                     </div>
                 </div>
 
-                {/* Academic Milestone Sidebar */}
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-slate-900 p-8 rounded-[32px] border border-slate-800 shadow-2xl relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <h3 className="text-white font-bold text-lg mb-8 flex items-center gap-2">
-                                <TrendingUp size={18} className="text-primary" />
-                                Rata-rata IPK Universitas
-                            </h3>
-                            <div className="text-center py-6">
-                                <h4 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary to-blue-400">3.42</h4>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-4">Peningkatan +0.12 dari Semester Lalu</p>
-                            </div>
-                            <div className="mt-8 grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Target Kelulusan</p>
-                                    <p className="text-lg font-black text-white">4.0 Thn</p>
-                                </div>
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Keketatan Prodi</p>
-                                    <p className="text-lg font-black text-white">1:12</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -z-0"></div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-primary/5 to-emerald-500/5 p-8 rounded-[32px] border border-primary/10 flex flex-col gap-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/10">
-                                <BookOpen size={20} />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-800 dark:text-white">Trend Aktivitas MK</h4>
-                                <p className="text-[10px] text-slate-500 font-medium tracking-tight">Menghitung rata-rata SKS per Mhs.</p>
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            {[
-                                { label: 'SKS Ganjil', val: 21.4, icon: ArrowUpRight, color: 'text-emerald-500' },
-                                { label: 'SKS Genap', val: 19.8, icon: ArrowDownRight, color: 'text-red-500' }
-                            ].map(item => (
-                                <div key={item.label} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                                    <div className="flex items-center gap-3">
-                                        <item.icon size={16} className={item.color} />
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
-                                    </div>
-                                    <span className="text-sm font-black">{item.val}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-slate-50 dark:border-slate-800/50">
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Mahasiswa</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Semester</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Total SKS</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">IPK</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                            {loading ? (
+                                <tr><td colSpan={5} className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Memuat Data...</td></tr>
+                            ) : filteredStudents.length === 0 ? (
+                                <tr><td colSpan={5} className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Tidak ada data ditemukan.</td></tr>
+                            ) : (
+                                filteredStudents.map((s) => (
+                                    <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all group">
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-black text-xs border border-primary/10 group-hover:scale-110 transition-transform">
+                                                    {s.full_name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-800 dark:text-white group-hover:text-primary transition-colors">{s.full_name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{s.nim_nip} • {s.study_program}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6 text-center font-bold text-slate-600 dark:text-slate-400 text-sm">
+                                            {s.semester || 1}
+                                        </td>
+                                        <td className="px-8 py-6 text-center font-bold text-slate-600 dark:text-slate-400 text-sm">
+                                            {s.total_sks}
+                                        </td>
+                                        <td className="px-8 py-6 text-center">
+                                            <div className={cn(
+                                                "inline-block px-3 py-1 rounded-lg text-xs font-black",
+                                                parseFloat(s.gpa) >= 3.5 ? "bg-emerald-50 text-emerald-600" :
+                                                    parseFloat(s.gpa) >= 3.0 ? "bg-blue-50 text-blue-600" :
+                                                        "bg-amber-50 text-amber-600"
+                                            )}>
+                                                {s.gpa}
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6 text-right no-print">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handlePrint(s, 'khs')}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-600 dark:text-slate-300 rounded-lg hover:border-primary hover:text-primary transition-all uppercase tracking-tighter"
+                                                >
+                                                    <Printer size={12} />
+                                                    KHS
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePrint(s, 'transcript')}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border border-primary/20 text-[10px] font-black text-primary rounded-lg hover:bg-primary hover:text-white transition-all uppercase tracking-tighter shadow-sm shadow-primary/5"
+                                                >
+                                                    <Download size={12} />
+                                                    Transkrip
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
