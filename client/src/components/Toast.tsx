@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle, X, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export type ToastType = 'success' | 'error' | 'info';
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface ToastProps {
     isOpen: boolean;
@@ -25,13 +25,15 @@ const Toast: React.FC<ToastProps> = ({ isOpen, message, type = 'success', onClos
     const icons = {
         success: <CheckCircle2 className="text-emerald-500" size={20} />,
         error: <AlertCircle className="text-rose-500" size={20} />,
-        info: <Info className="text-blue-500" size={20} />
+        info: <Info className="text-blue-500" size={20} />,
+        warning: <AlertCircle className="text-amber-500" size={20} />
     };
 
     const backgrounds = {
         success: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20',
         error: 'bg-rose-50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20',
-        info: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20'
+        info: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
+        warning: 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20'
     };
 
     return (
@@ -68,7 +70,7 @@ const Toast: React.FC<ToastProps> = ({ isOpen, message, type = 'success', onClos
                         transition={{ duration: 3, ease: "linear" }}
                         className={cn(
                             "absolute bottom-0 left-0 right-0 h-1 origin-left rounded-b-2xl",
-                            type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-blue-500'
+                            type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
                         )}
                     />
                 </motion.div>

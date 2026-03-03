@@ -505,22 +505,24 @@ const DashboardPage: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="bg-gradient-to-br from-primary to-blue-600 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-primary/20 shadow-xl shadow-primary/20 text-white relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <h3 className="text-lg lg:text-xl font-bold mb-2">Pendaftaran KRS</h3>
-                            <p className="text-blue-100 text-xs lg:text-sm mb-8 opacity-80 leading-relaxed">Periode Semester Genap 2023/2024 masih dibuka hingga 10 Maret 2026.</p>
-                            <button
-                                onClick={() => navigate('/krs')}
-                                className="w-full sm:w-auto px-6 py-3 bg-white text-primary font-bold rounded-xl text-xs lg:text-sm flex items-center justify-center gap-2 group/btn shadow-lg shadow-black/10 active:scale-95 transition-all"
-                            >
-                                Daftar Sekarang
-                                <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </button>
+                    {profile?.role === 'mahasiswa' && (
+                        <div className="bg-gradient-to-br from-primary to-blue-600 p-6 lg:p-8 rounded-2xl lg:rounded-3xl border border-primary/20 shadow-xl shadow-primary/20 text-white relative overflow-hidden group">
+                            <div className="relative z-10">
+                                <h3 className="text-lg lg:text-xl font-bold mb-2">Pendaftaran KRS</h3>
+                                <p className="text-blue-100 text-xs lg:text-sm mb-8 opacity-80 leading-relaxed">Periode Semester Genap 2023/2024 masih dibuka hingga 10 Maret 2026.</p>
+                                <button
+                                    onClick={() => navigate('/krs')}
+                                    className="w-full sm:w-auto px-6 py-3 bg-white text-primary font-bold rounded-xl text-xs lg:text-sm flex items-center justify-center gap-2 group/btn shadow-lg shadow-black/10 active:scale-95 transition-all"
+                                >
+                                    Daftar Sekarang
+                                    <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                                </button>
+                            </div>
+                            <div className="absolute top-4 right-4 text-white/20">
+                                <BookOpen size={64} strokeWidth={1} />
+                            </div>
                         </div>
-                        <div className="absolute top-4 right-4 text-white/20">
-                            <BookOpen size={64} strokeWidth={1} />
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
 

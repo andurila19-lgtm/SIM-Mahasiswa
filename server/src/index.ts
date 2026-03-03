@@ -22,10 +22,12 @@ app.use(express.urlencoded({ extended: true }));
 import studentRoutes from './routes/studentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import superadminRoutes from './routes/superadminRoutes.js';
 
 app.use('/api/students', studentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/superadmin', superadminRoutes);
 
 // Basic Route
 app.get('/api/health', (req: Request, res: Response) => {

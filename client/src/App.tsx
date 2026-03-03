@@ -28,6 +28,7 @@ import StudentBillsPage from './pages/StudentBillsPage';
 import PaymentHistoryPage from './pages/PaymentHistoryPage';
 import FinanceReportPage from './pages/FinanceReportPage';
 import AcademicReportPage from './pages/AcademicReportPage';
+import SuperAdminPage from './pages/SuperAdminPage';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -45,6 +46,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
 
     return <>{children}</>;
 };
+
 
 // Analytics Tracker Component
 const AnalyticsTracker: React.FC = () => {
@@ -121,6 +123,9 @@ const App: React.FC = () => {
                     } />
                     <Route path="users" element={
                         <ProtectedRoute allowedRoles={['superadmin']}><UserManagement /></ProtectedRoute>
+                    } />
+                    <Route path="super-admin" element={
+                        <ProtectedRoute allowedRoles={['superadmin']}><SuperAdminPage /></ProtectedRoute>
                     } />
 
                     {/* Mahasiswa Extra Routes */}

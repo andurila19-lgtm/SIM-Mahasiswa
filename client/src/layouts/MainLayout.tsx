@@ -15,7 +15,8 @@ import {
     User,
     Calendar,
     Clock,
-    TrendingUp
+    TrendingUp,
+    Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
@@ -44,6 +45,7 @@ const MainLayout: React.FC = () => {
         { name: 'Verifikasi KRS', icon: ClipboardCheck, path: '/krs-verification', roles: ['superadmin', 'akademik'] },
         { name: 'Verifikasi Bayar', icon: CreditCard, path: '/payment-verification', roles: ['superadmin', 'keuangan'] },
         { name: 'Manajemen User', icon: User, path: '/users', roles: ['superadmin'] },
+        { name: 'Super Admin Panel', icon: Shield, path: '/super-admin', roles: ['superadmin'] },
 
         // MAHASISWA SPECIFIC
         { name: 'Profil Saya', icon: User, path: '/profile', roles: ['mahasiswa'] },
