@@ -27,8 +27,10 @@ const FinanceReportPage: React.FC = () => {
         countUnpaid: 0
     });
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     const fetchData = async () => {
+        setRefreshing(true);
         setLoading(true);
         try {
             const { data, error } = await supabase.from('student_bills').select('amount, status');
@@ -61,6 +63,7 @@ const FinanceReportPage: React.FC = () => {
             console.error('Report Error:', err);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -70,6 +73,93 @@ const FinanceReportPage: React.FC = () => {
 
     const formatCurrency = (amt: number) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amt);
+    };
+
+    // ─── Export Laporan sebagai PNG ─────────────────────────────
+    const exportReport = () => {
+        const W = 800, H = 600;
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d')!;
+
+        // BG
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        // Header
+        const grad = ctx.createLinearGradient(0, 0, W, 0);
+        grad.addColorStop(0, '#3b82f6');
+        grad.addColorStop(1, '#6366f1');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, 90);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 24px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('LAPORAN KEUANGAN — UNIVERSITAS CEPAT', W / 2, 40);
+        ctx.font = '13px Arial, sans-serif';
+        ctx.fillText(`Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`, W / 2, 65);
+
+        // Cards
+        const cards = [
+            { label: 'Total Pendapatan (Lunas)', value: formatCurrency(stats.totalPaid), count: `${stats.countPaid} Transaksi`, color: '#059669', bg: '#f0fdf4' },
+            { label: 'Pending (Verifikasi)', value: formatCurrency(stats.totalPending), count: `${stats.countPending} Mahasiswa`, color: '#d97706', bg: '#fffbeb' },
+            { label: 'Tunggakan (Belum Bayar)', value: formatCurrency(stats.totalUnpaid), count: `${stats.countUnpaid} Mahasiswa`, color: '#dc2626', bg: '#fef2f2' },
+        ];
+
+        const cardW = 220, cardH = 120, gap = 25, startX = (W - (cardW * 3 + gap * 2)) / 2;
+        cards.forEach((c, i) => {
+            const x = startX + i * (cardW + gap), y = 120;
+            ctx.fillStyle = c.bg;
+            ctx.beginPath(); ctx.roundRect(x, y, cardW, cardH, 14); ctx.fill();
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.stroke();
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '10px Arial, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(c.label.toUpperCase(), x + 18, y + 30);
+            ctx.fillStyle = c.color;
+            ctx.font = 'bold 22px Arial, sans-serif';
+            ctx.fillText(c.value, x + 18, y + 65);
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px Arial, sans-serif';
+            ctx.fillText(c.count, x + 18, y + 95);
+        });
+
+        // Summary table
+        const tableY = 280;
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath(); ctx.roundRect(60, tableY, W - 120, 200, 14); ctx.fill();
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.stroke();
+
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 15px Arial, sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText('Ringkasan Keuangan', 85, tableY + 35);
+
+        const rows = [
+            ['Pendapatan Masuk', formatCurrency(stats.totalPaid), '#059669'],
+            ['Menunggu Verifikasi', formatCurrency(stats.totalPending), '#d97706'],
+            ['Piutang / Tunggakan', formatCurrency(stats.totalUnpaid), '#dc2626'],
+            ['Total Keseluruhan', formatCurrency(stats.totalPaid + stats.totalPending + stats.totalUnpaid), '#1e293b'],
+        ];
+        rows.forEach((r, i) => {
+            const ry = tableY + 65 + i * 32;
+            ctx.fillStyle = '#64748b'; ctx.font = '13px Arial, sans-serif'; ctx.textAlign = 'left';
+            ctx.fillText(r[0], 85, ry);
+            ctx.fillStyle = r[2]; ctx.font = 'bold 14px Arial, sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText(r[1], W - 85, ry);
+            if (i < rows.length - 1) {
+                ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); ctx.moveTo(85, ry + 12); ctx.lineTo(W - 85, ry + 12); ctx.stroke();
+            }
+        });
+
+        // Footer
+        ctx.textAlign = 'center'; ctx.fillStyle = '#94a3b8'; ctx.font = '10px Arial, sans-serif';
+        ctx.fillText('Dokumen ini dibuat secara otomatis oleh SIM CEPAT', W / 2, H - 40);
+        ctx.fillText(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, W / 2, H - 24);
+
+        const link = document.createElement('a');
+        link.download = `laporan_keuangan_${new Date().toISOString().slice(0, 10)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
     };
 
     return (
@@ -85,12 +175,13 @@ const FinanceReportPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3 relative z-10">
-                    <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+                    <button onClick={exportReport} className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
                         <Download size={18} />
                         Export PDF
                     </button>
-                    <button onClick={fetchData} className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                        Refresh Data
+                    <button onClick={fetchData} disabled={refreshing} className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70">
+                        {refreshing && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                        {refreshing ? 'Memuat...' : 'Refresh Data'}
                     </button>
                 </div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/4 -z-0"></div>

@@ -8,15 +8,31 @@
 Aplikasi dapat diakses secara langsung melalui:
 - **URL**: [https://sim.anduril.web.id](https://sim.anduril.web.id)
 
-### 🔑 Akun Login per Role
+### 🔑 Akun Login Staff
 
 | Role | Email | Password |
 |------|-------|----------|
 | 👑 Super Admin | `superadmin@sim.ac.id` | `superadmin123` |
-| 🎓 Mahasiswa | `mahasiswa@sim.ac.id` | `mhs123` |
 | 👨‍🏫 Dosen | `dosen@sim.ac.id` | `dosen123` |
 | 🏫 Staff Akademik | `akademik@sim.ac.id` | `akademik123` |
 | 💰 Keuangan | `keuangan@sim.ac.id` | `keuangan123` |
+
+### 🎓 Akun Login Mahasiswa (20 Akun Demo)
+
+Daftar lengkap 20 akun mahasiswa dari 6 fakultas dan 10 prodi tersedia dalam file Excel:
+
+📎 **[Daftar_Akun_Login_SIM_CEPAT.xlsx](docs/Daftar_Akun_Login_SIM_CEPAT.xlsx)**
+
+> **Password semua mahasiswa:** `Mhs@12345`
+
+| Fakultas | Prodi | Jumlah |
+|----------|-------|--------|
+| Fakultas Teknik | Teknik Informatika, Teknik Sipil | 4 |
+| Fakultas Ekonomi & Bisnis | Manajemen, Akuntansi | 4 |
+| Fakultas Hukum | Ilmu Hukum | 2 |
+| Fakultas Kedokteran | Pendidikan Dokter, Farmasi | 3 |
+| Fakultas Ilmu Sosial & Politik | Ilmu Komunikasi, Administrasi Publik | 3 |
+| Fakultas Keguruan & Ilmu Pendidikan | Pendidikan Matematika, Pendidikan Bahasa Inggris | 4 |
 
 ## ✨ Fitur Utama
 - **Manajemen User & Role**: Pengaturan akses terpusat untuk Admin, Dosen, Mahasiswa, dan Staff.

@@ -33,6 +33,7 @@
     "@types/pdfkit": "^0.13.9",
     "nodemon": "^3.1.9",
     "tsx": "^4.7.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "xlsx": "^0.18.5"
   }
 }

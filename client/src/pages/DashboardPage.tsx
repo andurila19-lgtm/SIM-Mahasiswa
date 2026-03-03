@@ -91,53 +91,123 @@ const DashboardPage: React.FC = () => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // ... dynamic data fetching logic could go here ...
-                // For now, using the established role-based stat logic
-                const defaultStats: Stat[] = [
-                    { id: 1, name: 'IPK Terakhir', value: '4.00', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                    { id: 2, name: 'SKS Kumulatif', value: '0', icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                    { id: 3, name: 'Presensi', value: '100%', icon: ClipboardCheck, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
-                    { id: 4, name: 'Status Bayar', value: 'Lunas', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-                ];
-
-                const lecturerStats: Stat[] = [
-                    { id: 1, name: 'Kelas Aktif', value: '4', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                    { id: 2, name: 'Total Mahasiswa', value: '128', icon: User, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                    { id: 3, name: 'Kehadiran (Avg)', value: '92%', icon: ClipboardCheck, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                    { id: 4, name: 'Butuh Penilaian', value: '12', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                ];
-
-                const akademikStats: Stat[] = [
-                    { id: 1, name: 'KRS Pending', value: '24', icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-                    { id: 2, name: 'Jadwal Aktif', value: '56', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                    { id: 3, name: 'Mhs Cuti', value: '3', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                    { id: 4, name: 'Ruang Tersedia', value: '15/40', icon: MapPin, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-                ];
-
-                const keuanganStats: Stat[] = [
-                    { id: 1, name: 'Total Pemasukan', value: 'Rp 450M+', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                    { id: 2, name: 'Mhs Belum Bayar', value: '12', icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                    { id: 3, name: 'Invoice Baru', value: '8', icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                    { id: 4, name: 'Laporan Keuangan', value: 'Ready', icon: ClipboardCheck, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-                ];
+                const formatCurrency = (n: number) => {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+                };
 
                 if (profile?.role === 'superadmin') {
+                    // ─── Superadmin: real counts + real monthly payment ───
                     const { count: sCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'mahasiswa');
                     const { count: lCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'dosen');
+
+                    // Monthly paid amount
+                    const now = new Date();
+                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                    const { data: monthlyBills } = await supabase
+                        .from('student_bills')
+                        .select('amount')
+                        .eq('status', 'paid')
+                        .gte('created_at', startOfMonth);
+                    const monthlyPaid = (monthlyBills || []).reduce((s: number, b: any) => s + (b.amount || 0), 0);
+
                     const adminStats: Stat[] = [
                         { id: 1, name: 'Total Mahasiswa', value: (sCount || 0).toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
                         { id: 2, name: 'Total Dosen', value: (lCount || 0).toString(), icon: GraduationCap, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-                        { id: 3, name: 'Pembayaran (Bln)', value: 'Rp 1.2M', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                        { id: 3, name: 'Pembayaran (Bln)', value: formatCurrency(monthlyPaid), icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
                         { id: 4, name: 'Status Sistem', value: 'Online', icon: Bell, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50' },
                     ];
                     setStats(adminStats);
+
                 } else if (profile?.role === 'dosen') {
+                    // ─── Dosen: real student count ───
+                    const { count: mhsCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'mahasiswa');
+                    const { count: pendingKrs } = await supabase.from('student_krs').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+
+                    const lecturerStats: Stat[] = [
+                        { id: 1, name: 'Kelas Aktif', value: '-', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                        { id: 2, name: 'Total Mahasiswa', value: (mhsCount || 0).toString(), icon: User, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                        { id: 3, name: 'KRS Pending', value: (pendingKrs || 0).toString(), icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                        { id: 4, name: 'Butuh Penilaian', value: '-', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                    ];
                     setStats(lecturerStats);
+
                 } else if (profile?.role === 'akademik') {
+                    // ─── Akademik: real KRS pending, student counts ───
+                    const { count: pendingKrs } = await supabase.from('student_krs').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+                    const { count: totalMhs } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'mahasiswa');
+                    const { count: totalDosen } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'dosen');
+
+                    const akademikStats: Stat[] = [
+                        { id: 1, name: 'KRS Pending', value: (pendingKrs || 0).toString(), icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                        { id: 2, name: 'Total Mahasiswa', value: (totalMhs || 0).toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                        { id: 3, name: 'Total Dosen', value: (totalDosen || 0).toString(), icon: User, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                        { id: 4, name: 'Status Sistem', value: 'Aktif', icon: MapPin, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+                    ];
                     setStats(akademikStats);
+
                 } else if (profile?.role === 'keuangan') {
+                    // ─── Keuangan: real-time financial stats ───
+                    const { data: allBills } = await supabase
+                        .from('student_bills')
+                        .select('amount, status, student_id, created_at');
+
+                    const bills = allBills || [];
+                    const paidTotal = bills.filter((b: any) => b.status === 'paid').reduce((s: number, b: any) => s + (b.amount || 0), 0);
+                    const unpaidStudents = new Set(bills.filter((b: any) => b.status === 'unpaid').map((b: any) => b.student_id));
+
+                    // Invoice baru = tagihan yang dibuat dalam 7 hari terakhir
+                    const sevenDaysAgo = new Date();
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    const newInvoices = bills.filter((b: any) => new Date(b.created_at) >= sevenDaysAgo).length;
+
+                    const pendingCount = bills.filter((b: any) => b.status === 'pending').length;
+
+                    const keuanganStats: Stat[] = [
+                        { id: 1, name: 'Total Pemasukan', value: formatCurrency(paidTotal), icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                        { id: 2, name: 'Mhs Belum Bayar', value: unpaidStudents.size.toString(), icon: Users, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                        { id: 3, name: 'Invoice Baru', value: newInvoices.toString(), icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                        { id: 4, name: 'Menunggu Verifikasi', value: pendingCount.toString(), icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                    ];
                     setStats(keuanganStats);
+
                 } else {
+                    // ─── Mahasiswa: real-time personal stats ───
+                    let ipk = '0.00';
+                    let totalSks = 0;
+
+                    // Fetch KRS dengan courses untuk hitung SKS
+                    const { data: krsData } = await supabase
+                        .from('student_krs')
+                        .select('courses')
+                        .eq('student_id', profile?.id)
+                        .eq('status', 'approved');
+
+                    if (krsData && krsData.length > 0) {
+                        krsData.forEach((krs: any) => {
+                            if (krs.courses && Array.isArray(krs.courses)) {
+                                totalSks += krs.courses.reduce((s: number, c: any) => s + (c.sks || 0), 0);
+                            }
+                        });
+                    }
+
+                    // Fetch payment status
+                    const { data: myBills } = await supabase
+                        .from('student_bills')
+                        .select('status')
+                        .eq('student_id', profile?.id);
+
+                    const hasUnpaid = (myBills || []).some((b: any) => b.status === 'unpaid');
+                    const hasPending = (myBills || []).some((b: any) => b.status === 'pending');
+                    const paymentStatus = hasUnpaid ? 'Belum Lunas' : hasPending ? 'Menunggu' : (myBills && myBills.length > 0 ? 'Lunas' : 'N/A');
+                    const paymentColor = hasUnpaid ? 'text-rose-500' : hasPending ? 'text-amber-500' : 'text-emerald-500';
+                    const paymentBg = hasUnpaid ? 'bg-rose-50 dark:bg-rose-900/20' : hasPending ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20';
+
+                    const defaultStats: Stat[] = [
+                        { id: 1, name: 'IPK Terakhir', value: ipk, icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                        { id: 2, name: 'SKS Kumulatif', value: totalSks.toString(), icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                        { id: 3, name: 'Presensi', value: '100%', icon: ClipboardCheck, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
+                        { id: 4, name: 'Status Bayar', value: paymentStatus, icon: CreditCard, color: paymentColor, bg: paymentBg },
+                    ];
                     setStats(defaultStats);
                 }
             } catch (err) {
