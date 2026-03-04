@@ -7,7 +7,7 @@
             "destination": "/server/api/index.ts"
         },
         {
-            "source": "/((?!api/).*)",
+            "source": "/(.*)",
             "destination": "/index.html"
         }
     ],
