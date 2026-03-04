@@ -62,13 +62,13 @@ const GradesPage: React.FC = () => {
             // 2. Fetch real locked grades
             const { data: gradesData, error: gradesError } = await supabase
                 .from('student_grades')
-                .select('course_id, grade_letter, final_score')
+                .select('class_id, grade_letter, final_score')
                 .eq('student_id', profile.id)
                 .eq('is_locked', true);
 
             const gradesMap: Record<string, any> = {};
             (gradesData || []).forEach(g => {
-                gradesMap[g.course_id] = g;
+                gradesMap[g.class_id] = g;
             });
 
             if (krsData?.courses && (krsData.status === 'approved' || krsData.status === 'pending')) {
@@ -78,7 +78,7 @@ const GradesPage: React.FC = () => {
                 };
 
                 const coursesWithGrades = krsData.courses.map((c: any, i: number) => {
-                    const gradeRecord = gradesMap[c.id];
+                    const gradeRecord = gradesMap[c.id] || gradesMap[c.class_id] || gradesMap[c.course_id];
                     const letter = gradeRecord?.grade_letter || 'N/A';
                     return {
                         id: i,

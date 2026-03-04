@@ -225,7 +225,7 @@ const DashboardPage: React.FC = () => {
                     // Fetch Grades for IPK
                     const { data: grades } = await supabase
                         .from('student_grades')
-                        .select('grade_letter, course_id')
+                        .select('grade_letter, class_id')
                         .eq('student_id', profile?.id)
                         .eq('is_locked', true);
 
@@ -239,7 +239,7 @@ const DashboardPage: React.FC = () => {
                         let totalGradedSks = 0;
 
                         grades.forEach(g => {
-                            const course = krsCourses.find((c: any) => c.id === g.course_id);
+                            const course = krsCourses.find((c: any) => c.id === g.class_id || c.course_id === g.class_id || c.class_id === g.class_id);
                             if (course) {
                                 const pts = letterToPoint[g.grade_letter] || 0;
                                 totalGradePoints += pts * (course.sks || 0);
@@ -288,7 +288,7 @@ const DashboardPage: React.FC = () => {
                     .order('created_at', { ascending: false })
                     .limit(3);
 
-                if (error) throw error;
+                if (error && error.code !== 'PGRST205') throw error;
                 if (data) {
                     setAnnouncements(data.map((item: any) => ({
                         id: item.id,
