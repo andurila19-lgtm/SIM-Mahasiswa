@@ -47,6 +47,12 @@ Daftar lengkap 20 akun mahasiswa dari 6 fakultas dan 10 prodi tersedia dalam fil
     - **OCR Verification**: Pemindaian bukti bayar otomatis menggunakan visi komputer (Tesseract.js).
 - **Tampilan Premium**: UI modern dengan Dark Mode support, animasi halus (Framer Motion), dan responsivitas tinggi.
 
+## 🎁 Open Source (Gratis)
+
+Source code lengkap dari aplikasi **SIM CEPAT** ini bersifat **100% Gratis (Open Source)**. Anda bebas untuk mengunduh, memodifikasi, dan menggunakan source code ini baik untuk keperluan pembelajaran, tugas akhir mahasiswa, maupun implementasi langsung di kampus/instansi Anda.
+
+Jika Anda menemukan aplikasi ini bermanfaat, jangan lupa untuk memberikan 🌟 **Star** pada repositori ini sebagai bentuk dukungan kepada developer!
+
 ## 🛠️ Tech Stack
 - **Frontend**: React.js 18, Vite, TypeScript, Tailwind CSS, Framer Motion, Lucide React.
 - **AI/ML**: Tesseract.js (Optical Character Recognition), SIM-Brain v1.0 (Heuristic Intelligence).
@@ -115,6 +121,24 @@ Klik tombol **Deploy**. Vercel akan otomatis melakukan proses *build* dan aplika
    ```bash
    npm run dev
    ```
+
+## ⚖️ Lisensi & Hak Kekayaan Intelektual
+
+Aplikasi **SIM CEPAT** didistribusikan di bawah **MIT License**.
+Ini berarti:
+* ✅ Anda bebas menggunakan, menyalin, memodifikasi, menggabungkan, menerbitkan, mendistribusikan, menyublisensikan, dan/atau menjual salinan *source code* ini.
+* ✅ Anda dapat menggunakannya untuk proyek personal, tugas akhir/skripsi kampus, maupun penggunaan komersial di instansi pendidikan.
+* ❌ Anda **diharuskan** menyertakan pemberitahuan hak cipta asli dan izin lisensi dalam setiap salinan atau bagian substansial dari perangkat lunak.
+
+> **Catatan Tambahan terkait Hak Paten/Merek:** 
+> Nama "SIM CEPAT" dan aset logo/branding yang spesifik di dalam aplikasi ini adalah hak kekayaan intelektual milik developer asli. Jika Anda berencana merilis ulang aplikasi ini untuk **tujuan komersial skala besar**, disarankan untuk melakukan *re-branding* (mengubah nama dan logo) agar tidak melanggar hak merek dagang yang mungkin melekat pada branding "SIM CEPAT".
+
+## 📞 Hubungi Developer
+
+Jika Anda memiliki pertanyaan, penawaran kerja sama, atau ingin berkontribusi pada project ini, jangan ragu untuk menghubungi:
+
+- 📧 **Email:** [andurila19@gmail.com]
+- 📸 **Instagram:** [@rm_andurilahmad](https://instagram.com/rm_andurilahmad)
 
 ---
 © 2026 Admin Kampus - SIM CEPAT Development Team.
