@@ -3,6 +3,10 @@
     "outputDirectory": "dist",
     "routes": [
         {
+            "src": "/api/go/(.*)",
+            "dest": "/server/api/hello.go"
+        },
+        {
             "src": "/api/(.*)",
             "dest": "/server/api/index.ts"
         },
@@ -17,6 +21,9 @@
     "functions": {
         "server/api/index.ts": {
             "runtime": "@vercel/node"
+        },
+        "server/api/*.go": {
+            "runtime": "@vercel/go"
         }
     }
 }
